@@ -73,7 +73,8 @@ export default function SignalApp() {
     // Map zoom/panning must not update the app for tiny pixel changes.
     setCentre(old => (old.lat.toFixed(2) === location.lat.toFixed(2) && old.lon.toFixed(2) === location.lon.toFixed(2) ? old : location));
     setZoom(old => Math.floor(old) === Math.floor(level) ? old : level);
-  }, []);
+    if (distanceMetres(location, focus) > 1300) setAreaLabel("Map near " + location.lat.toFixed(3) + ", " + location.lon.toFixed(3));
+  }, [focus]);
   const useLocation = () => {
     if (!navigator.geolocation) { setNotice("This browser doesn't support location services."); return; }
     setGeolocating(true);
@@ -142,7 +143,7 @@ export default function SignalApp() {
             <div className="data-options"><div className="tech-pills"><button className={technology === "4G" ? "chosen" : ""} aria-pressed={technology === "4G"} onClick={() => setTechnology("4G")}>4G</button><button className={technology === "5G" ? "chosen" : ""} aria-pressed={technology === "5G"} onClick={() => setTechnology("5G")}>5G</button></div><label className="wifi-toggle"><input type="checkbox" checked={showWiFi} onChange={e => setShowWiFi(e.target.checked)}/><Wifi size={16}/> Wi-Fi pins</label></div>
             <div className="coverage-note"><ShieldAlert size={17}/><p><strong>No signal prediction displayed.</strong> {coverage.network} {coverage.technology} coverage needs an authorised Ofcom feed. <a href="https://www.ofcom.org.uk/phones-and-broadband/coverage-and-speeds/ofcom-checker" target="_blank" rel="noopener noreferrer">Check at Ofcom <ExternalLink size={12}/></a></p></div>
             <div className="wifi-heading"><div><span className="eyebrow">PUBLIC WI-FI</span><h2>Connections nearby</h2></div><span className="results-count">{loading ? "Looking…" : zoom < 11 ? "Zoom in" : result ? visible.length + " found" : "—"}</span></div>
-            <div className="filter-row"><label><input type="checkbox" checked={includeRestricted} onChange={event => setIncludeRestricted(event.target.checked)}/> Include customer-only & paid</label><span>OSM data · not tested</span></div>
+            <div className="filter-row"><label><input type="checkbox" checked={includeRestricted} onChange={event => setIncludeRestricted(event.target.checked)}/> Include customer-only & paid</label><span>{result ? "Fetched " + new Date(result.fetchedAt).toLocaleDateString("en-GB") : "OSM data · not tested"}</span></div>
             {zoom < 11 ? <p className="list-message">Zoom in or search a postcode to look for Wi-Fi locations within 3 km.</p> : !online ? <p className="list-message">You're offline. Your saved Wi-Fi lists are in <button className="inline-action" onClick={() => setTab("saved")}>Saved</button>.</p> :
               loading ? <div className="list-message loading-indicator">Looking for mapped Wi-Fi around this area…</div> :
               fetchError ? <p className="list-message error">{fetchError} <button className="inline-action" onClick={() => focusOn(centre, areaLabel, zoom)}>Try again</button></p> :

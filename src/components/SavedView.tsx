@@ -29,7 +29,7 @@ export default function SavedView({ areas, openId, setOpenId, onDelete, online }
         <p className="muted text-small">Saved {new Date(open.savedAt).toLocaleString("en-GB")} · {online ? "You're online, but this is your saved snapshot." : "Currently offline"}</p>
         {open.places.length === 0 ? <p>No Wi-Fi locations were in this saved snapshot.</p> :
         <ol className="saved-places">{sortByDistance(open.places, open.centre).slice(0, 60).map(place => <li key={place.id}>
-          <div><strong>{place.name}</strong><small>{place.access === "free" ? "Tagged free" : place.access === "unknown" ? "Cost unconfirmed" : place.access === "customers" ? "Customers only" : "Paid"} · {prettyDistance(distanceMetres(open.centre, place))} from centre</small><small>{place.lat.toFixed(5)}, {place.lon.toFixed(5)}</small></div>
+          <div><strong>{place.name}</strong><small>{place.access === "free" ? "Tagged free" : place.access === "unknown" ? "Cost unconfirmed" : place.access === "customers" ? "Customers only" : "Paid"} · {prettyDistance(distanceMetres(open.centre, place))} from centre</small><small>{place.openingHours ? "Hours: " + place.openingHours : "Opening hours not recorded"}</small><small>{place.lat.toFixed(5)}, {place.lon.toFixed(5)}</small></div>
           <a href={place.osmUrl} target="_blank" rel="noopener noreferrer" aria-label={"Open " + place.name + " on OpenStreetMap (requires connection)"}>OSM ↗</a>
         </li>)}</ol>}
       </div>}</div>}
