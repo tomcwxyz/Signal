@@ -2,6 +2,45 @@
 
 **Find a connection, wherever you are.**
 
-A mobile-first, UK-wide connectivity map for checking nearby public Wi-Fi and planning for areas without mobile signal.
+Signal is an open, mobile-first UK connectivity map. Its first alpha focuses on real public Wi-Fi records, postcode-based planning and genuinely usable saved Wi-Fi lists when offline. No account is required.
 
-Development begins on the `feat/alpha-one-connectivity-map` branch. See its README for setup, current capabilities and data limitations.
+## Alpha 1
+
+- **Here:** Explore the map, find public Wi-Fi locations from OpenStreetMap and inspect access conditions.
+- **Plan:** Search a UK postcode, move the map and save a snapshot of nearby Wi-Fi locations.
+- **Saved:** Read saved Wi-Fi locations and their coordinates without an internet connection, including an offline schematic locator (not a street map).
+- **Coverage:** The interface includes 4G/5G and operator choices, but **does not show or invent coverage predictions until an authorised Ofcom source is connected**.
+
+Data is incomplete and user-contributed; *unknown* does not mean free, and *mapped* does not mean recently tested. Wi-Fi records are sourced from OSM through an Overpass API query. Signal does not claim Wi-Fi is working or that it's suitable to use securely.
+
+## Develop
+
+Requires Node.js 20+.
+
+```bash
+npm install
+npm run dev
+```
+
+Visit http://localhost:3000. Run `npm run typecheck`, `npm test` and `npm run build` before releasing.
+
+Deploy on Vercel with the normal Next.js framework preset. No credentials are needed for this alpha. Overpass and postcodes.io are external dependencies; public endpoint use should be replaced with an appropriate hosted/cache-backed source as traffic grows.
+
+## Data and offline limitations
+
+- The live base map uses OpenStreetMap's standard interactive **online** raster tiles. Signal never prefetches those tiles for offline use. OSM's [tile policy](https://operations.osmfoundation.org/policies/tiles/) prohibits such downloads.
+- Saving an area stores its currently fetched Wi-Fi place list locally in IndexedDB. It does **not** download street maps or predicted mobile coverage. Saved records have a timestamp and may become stale.
+- Offline area diagrams show relative hotspot positions, not streets, road access or directions. GPS may work offline on some devices but is not guaranteed.
+- Ofcom's replacement mobile coverage APIs require developer access. Integration is deliberately deferred until response schemas, terms and credentials are verified.
+- Location is requested only when the user taps "Use my location"; Signal does not store location on a server.
+
+## Planned next steps
+
+1. Get a hosted mobile preview working and test accessibility/performance.
+2. Add licensed offline vector map packs (PMTiles or equivalent); never bulk-download OSM community tile servers.
+3. Implement Ofcom's replacement mobile data API and accurately labelled, postcode-level predicted coverage.
+4. Improve source completeness and reliability through imports and (later) moderated community contributions.
+
+## Attribution
+
+Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL. Wi-Fi features retain their original OSM references. This repository currently has no software licence attached; permission to reuse code is not implied by the repository being public.
