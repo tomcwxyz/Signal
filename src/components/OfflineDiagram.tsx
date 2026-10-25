@@ -1,9 +1,9 @@
 import type { SavedArea } from "@/lib/types";
-import { distanceMetres } from "@/lib/geo";
+import { distanceMetres, sortByDistance } from "@/lib/geo";
 export default function OfflineDiagram({ area }: { area: SavedArea }) {
   // Coordinate plot, intentionally NOT represented as a street map.
   const radius = area.radiusMetres;
-  const points = area.places.filter(place => distanceMetres(area.centre, place) <= radius).slice(0, 60);
+  const points = sortByDistance(area.places, area.centre).filter(place => distanceMetres(area.centre, place) <= radius).slice(0, 60);
   const xy = (lat: number, lon: number) => ({
     x: Math.max(12, Math.min(288, 150 + (lon - area.centre.lon) * 111320 * Math.cos(area.centre.lat * Math.PI / 180) * 140 / radius)),
     y: Math.max(12, Math.min(288, 150 - (lat - area.centre.lat) * 111320 * 140 / radius))

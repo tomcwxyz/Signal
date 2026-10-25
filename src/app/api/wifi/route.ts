@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   const lon = Math.round(parsed.data.lon * 100) / 100;
   const query = "[out:json][timeout:20];nwr(around:3000," + lat + "," + lon + ")[\"internet_access\"=\"wlan\"];out center tags;";
   try {
-    const response = await fetch("https://overpass.kumi.systems/api/interpreter", {
+    const response = await fetch("https://overpass.private.coffee/api/interpreter", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "User-Agent": "Signal/0.1 (https://github.com/tomcwxyz/Signal)" },
       body: new URLSearchParams({ data: query }),
