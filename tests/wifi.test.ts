@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { classifyWiFiAccess, normaliseWiFi } from "../src/lib/wifi";
-import { distanceMetres, validCoordinates } from "../src/lib/geo";
+import { distanceMetres, snapshotCovers, validCoordinates } from "../src/lib/geo";
 test("never represents unknown fees as free", () => {
   assert.equal(classifyWiFiAccess({ internet_access: "wlan" }), "unknown");
   assert.equal(classifyWiFiAccess({ "internet_access:fee": "no" }), "free");
@@ -18,4 +18,12 @@ test("coordinates validate UK and distance is reasonable", () => {
   assert.equal(validCoordinates({ lat: 54.6, lon: -1.6 }), true);
   assert.equal(validCoordinates({ lat: 0, lon: 0 }), false);
   assert.ok(distanceMetres({ lat: 54.6, lon: -1.6 }, { lat: 54.61, lon: -1.6 }) > 1000);
+});
+
+test("saved Wi-Fi list cannot be used as if it were fetched for a distant town", () => {
+  assert.equal(snapshotCovers({ lat: 54.6, lon: -1.6 }, { lat: 54.601, lon: -1.601 }), true);
+  assert.equal(snapshotCovers({ lat: 54.6, lon: -1.6 }, { lat: 55.9, lon: -1.6 }), false);
+});
+test("customer access takes precedence even if a no-fee tag is present", () => {
+  assert.equal(classifyWiFiAccess({ access: "customers", "internet_access:fee": "no" }), "customers");
 });

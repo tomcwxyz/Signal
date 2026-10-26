@@ -9,7 +9,7 @@ export type OverpassElement = {
 };
 export function classifyWiFiAccess(tags: Record<string, string>): WiFiAccess {
   const fee = (tags["internet_access:fee"] ?? tags.fee ?? "").trim().toLowerCase();
-  if (fee === "customers" || tags.access === "customers") return "customers";
+  if (fee === "customers" || tags.access === "customers" || tags.internet_access === "customers") return "customers";
   if (["yes", "paid"].includes(fee)) return "paid";
   if (["no", "free"].includes(fee)) return "free";
   return "unknown";

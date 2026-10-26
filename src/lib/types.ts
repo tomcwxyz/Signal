@@ -11,7 +11,7 @@ export type WiFiPlace = {
   website?: string;
   osmUrl: string;
 };
-export type WiFiResult = { places: WiFiPlace[]; fetchedAt: string; source: "OpenStreetMap" };
+export type WiFiResult = { places: WiFiPlace[]; centre: LatLon; fetchedAt: string; source: "OpenStreetMap" };
 export type SavedArea = {
   id: string;
   label: string;

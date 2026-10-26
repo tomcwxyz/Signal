@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import { ArrowRight, BookmarkPlus, Compass, Download, ExternalLink, LocateFixed, MapPin, Search, ShieldAlert, Wifi, WifiOff } from "lucide-react";
 import SignalMap from "./SignalMap";
 import SavedView from "./SavedView";
-import { DEFAULT_CENTRE, FETCH_RADIUS_METRES, distanceMetres, prettyDistance, sortByDistance, validCoordinates } from "@/lib/geo";
+import { DEFAULT_CENTRE, FETCH_RADIUS_METRES, distanceMetres, prettyDistance, snapshotCovers, sortByDistance, validCoordinates } from "@/lib/geo";
 import { getCoverageState } from "@/lib/coverage";
 import { listAreas, removeArea, saveArea } from "@/lib/saved-areas";
 import type { LatLon, MobileNetwork, MobileTechnology, SavedArea, WiFiPlace, WiFiResult } from "@/lib/types";
@@ -24,6 +24,7 @@ export default function SignalApp() {
   const [includeRestricted, setIncludeRestricted] = useState(false);
   const [result, setResult] = useState<WiFiResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [freeOnly, setFreeOnly] = useState(false);
   const [fetchError, setFetchError] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [online, setOnline] = useState(true);
@@ -55,16 +56,21 @@ export default function SignalApp() {
     const abort = new AbortController();
     setLoading(true); setFetchError("");
     const params = new URLSearchParams({ lat: centre.lat.toFixed(2), lon: centre.lon.toFixed(2) });
-    fetch("/api/wifi?" + params, { signal: abort.signal }).then(async response => {
+    // Debounce map movement so panning does not overload shared OpenStreetMap servers.
+    const timeout = setTimeout(() => fetch("/api/wifi?" + params, { signal: abort.signal }).then(async response => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Wi-Fi look-up unavailable");
       return data as WiFiResult;
     }).then(data => { setResult(data); setSelectedId(null); })
       .catch(error => { if (!abort.signal.aborted) { setFetchError(error instanceof Error ? error.message : "Unable to load Wi-Fi spots"); setResult(null); } })
-      .finally(() => { if (!abort.signal.aborted) setLoading(false); });
-    return () => abort.abort();
+      .finally(() => { if (!abort.signal.aborted) setLoading(false); }), 650);
+    return () => { clearTimeout(timeout); abort.abort(); };
   }, [centre.lat, centre.lon, zoom, online, tab]);
-  const visible = useMemo(() => sortByDistance(result?.places.filter(place => includeRestricted || place.access === "free" || place.access === "unknown") ?? [], centre), [result, includeRestricted, centre]);
+  const resultIsLocal = Boolean(result && snapshotCovers(centre, result.centre));
+  const visible = useMemo(() => sortByDistance(
+    result && snapshotCovers(centre, result.centre) ?
+      result.places.filter(place => (includeRestricted || place.access === "free" || place.access === "unknown") && (!freeOnly || place.access === "free")) : [], centre
+  ), [result, includeRestricted, freeOnly, centre]);
   const selected = visible.find(place => place.id === selectedId) ?? visible[0];
   const focusOn = (location: LatLon, label: string, level = 13) => {
     setCentre(location); setZoom(level); setFocus(previous => ({ ...location, zoom: level, version: previous.version + 1 })); setAreaLabel(label); setSelectedId(null);
@@ -98,11 +104,11 @@ export default function SignalApp() {
     finally { setSearching(false); }
   };
   const storeArea = async () => {
-    if (!result || !online || zoom < 11) { setNotice("Load Wi-Fi locations before saving an area."); return; }
+    if (!result || !resultIsLocal || loading || !online || zoom < 11) { setNotice("Load Wi-Fi locations for this map area before saving."); return; }
     setSaving(true);
     try {
       const area: SavedArea = {
-        id: crypto.randomUUID(), label: areaLabel, centre, places: result.places,
+        id: crypto.randomUUID(), label: areaLabel.trim() || "Saved map area", centre, places: result.places,
         savedAt: new Date().toISOString(), radiusMetres: FETCH_RADIUS_METRES
       };
       await saveArea(area); await refreshAreas(); setNotice("Saved " + area.places.length + " Wi-Fi locations for offline use. Street map not included.");
@@ -126,7 +132,7 @@ export default function SignalApp() {
       )}
     </nav>
     {notice && <div className="notice" role="status"><span>{notice}</span><button aria-label="Dismiss message" onClick={() => setNotice("")}>×</button></div>}
-    {tab === "saved" ? <SavedView areas={areas} openId={openSavedId} setOpenId={setOpenSavedId} onDelete={deleteArea} online={online}/> :
+    {tab === "saved" ? <SavedView areas={areas} openId={openSavedId} setOpenId={setOpenSavedId} onDelete={deleteArea} online={online} onOpenMap={area => { focusOn(area.centre, area.label, 14); setTab("here"); }}/> :
       <>
         {tab === "plan" && <form className="plan-bar" onSubmit={searchPostcode}><Search size={18}/><input aria-label="Enter a UK postcode" value={postcode} onChange={event => setPostcode(event.target.value)} placeholder="Plan ahead — enter a UK postcode" autoComplete="postal-code"/><button className="small-primary" type="submit" disabled={searching}>{searching ? "Finding…" : "Find"} <ArrowRight size={15}/></button></form>}
         <div className="explorer">
@@ -142,17 +148,18 @@ export default function SignalApp() {
             </div>
             <div className="data-options"><div className="tech-pills"><button className={technology === "4G" ? "chosen" : ""} aria-pressed={technology === "4G"} onClick={() => setTechnology("4G")}>4G</button><button className={technology === "5G" ? "chosen" : ""} aria-pressed={technology === "5G"} onClick={() => setTechnology("5G")}>5G</button></div><label className="wifi-toggle"><input type="checkbox" checked={showWiFi} onChange={e => setShowWiFi(e.target.checked)}/><Wifi size={16}/> Wi-Fi pins</label></div>
             <div className="coverage-note"><ShieldAlert size={17}/><p><strong>No signal prediction displayed.</strong> {coverage.network} {coverage.technology} coverage needs an authorised Ofcom feed. <a href="https://www.ofcom.org.uk/phones-and-broadband/coverage-and-speeds/ofcom-checker" target="_blank" rel="noopener noreferrer">Check at Ofcom <ExternalLink size={12}/></a></p></div>
-            <div className="wifi-heading"><div><span className="eyebrow">PUBLIC WI-FI</span><h2>Connections nearby</h2></div><span className="results-count">{loading ? "Looking…" : zoom < 11 ? "Zoom in" : result ? visible.length + " found" : "—"}</span></div>
-            <div className="filter-row"><label><input type="checkbox" checked={includeRestricted} onChange={event => setIncludeRestricted(event.target.checked)}/> Include customer-only & paid</label><span>{result ? "Fetched " + new Date(result.fetchedAt).toLocaleDateString("en-GB") : "OSM data · not tested"}</span></div>
+            <div className="wifi-heading"><div><span className="eyebrow">PUBLIC WI-FI</span><h2>Connections nearby</h2></div><span className="results-count">{loading ? "Looking…" : zoom < 11 ? "Zoom in" : resultIsLocal ? visible.length + " found" : "—"}</span></div>
+            <div className="filter-row"><div className="wifi-filters"><label><input type="checkbox" checked={freeOnly} onChange={event => setFreeOnly(event.target.checked)}/> Only tagged free</label><label><input type="checkbox" checked={includeRestricted} onChange={event => setIncludeRestricted(event.target.checked)}/> Include restricted</label></div><span>{resultIsLocal && result ? "Checked " + new Date(result.fetchedAt).toLocaleDateString("en-GB") : "OSM · unverified"}</span></div>
             {zoom < 11 ? <p className="list-message">Zoom in or search a postcode to look for Wi-Fi locations within 3 km.</p> : !online ? <p className="list-message">You're offline. Your saved Wi-Fi lists are in <button className="inline-action" onClick={() => setTab("saved")}>Saved</button>.</p> :
               loading ? <div className="list-message loading-indicator">Looking for mapped Wi-Fi around this area…</div> :
               fetchError ? <p className="list-message error">{fetchError} <button className="inline-action" onClick={() => focusOn(centre, areaLabel, zoom)}>Try again</button></p> :
-              visible.length === 0 ? <p className="list-message">No matching Wi-Fi locations were found in OpenStreetMap around here. That doesn't mean none exist. Try another area or include restricted hotspots.</p> :
+              !resultIsLocal ? <p className="list-message">Search this area to see available Wi-Fi records.</p> : visible.length === 0 ? <p className="list-message">No matching Wi-Fi locations were found in OpenStreetMap around here. That doesn't mean none exist. Try another area or include restricted hotspots.</p> :
               <div className="places-list">{visible.slice(0, 12).map(place => <button key={place.id} className={"place-row" + (selected?.id === place.id ? " selected" : "")} onClick={() => setSelectedId(place.id)}>
                 <span className="wifi-icon"><Wifi size={19}/></span><span className="place-info"><strong>{place.name}</strong><small>{place.kind} · {prettyDistance(distanceMetres(centre, place))}</small></span><span className={"access-tag " + place.access}>{ACCESS[place.access]}</span>
               </button>)}{visible.length > 12 && <p className="list-message">Showing 12 nearest of {visible.length} mapped places.</p>}</div>}
             {selected && showWiFi && zoom >= 11 && online && !fetchError && <div className="place-detail"><span className="eyebrow">SELECTED CONNECTION</span><h3>{selected.name}</h3><div className="detail-access"><span className={"access-tag " + selected.access}>{ACCESS[selected.access]}</span><span>{prettyDistance(distanceMetres(centre, selected))} away</span></div><p>Opening hours: {selected.openingHours ?? "Not recorded"}. Availability and security have not been verified.</p><div className="detail-actions"><a target="_blank" rel="noopener noreferrer" href={selected.osmUrl}>View OSM record <ExternalLink size={14}/></a>{selected.website && <a target="_blank" rel="noopener noreferrer" href={selected.website}>Website <ExternalLink size={14}/></a>}</div></div>}
-            <button className="save-button" onClick={storeArea} disabled={saving || !online || !result || loading || zoom < 11}><BookmarkPlus size={19}/>{saving ? "Saving…" : "Save Wi-Fi list for offline use"}</button>
+            <label className="save-area-label" htmlFor="saved-area-name">Name this saved area</label><input id="saved-area-name" className="save-name-input" maxLength={80} value={areaLabel} onChange={event => setAreaLabel(event.target.value)}/>
+            <button className="save-button" onClick={storeArea} disabled={saving || !online || !resultIsLocal || loading || zoom < 11}><BookmarkPlus size={19}/>{saving ? "Saving…" : "Save Wi-Fi list for offline use"}</button>
             <p className="save-explainer">Saves Wi-Fi place information on this device. Does not download map tiles or mobile coverage.</p>
           </section>
         </div>

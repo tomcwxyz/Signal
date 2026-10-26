@@ -7,8 +7,8 @@ Signal is an open, mobile-first UK connectivity map. Its first alpha focuses on 
 ## Alpha 1
 
 - **Here:** Explore the map, find public Wi-Fi locations from OpenStreetMap and inspect access conditions.
-- **Plan:** Search a UK postcode, move the map and save a snapshot of nearby Wi-Fi locations.
-- **Saved:** Read saved Wi-Fi locations and their coordinates without an internet connection, including an offline schematic locator (not a street map).
+- **Plan:** Search a UK postcode, move the map, filter by Wi-Fi access and save a named snapshot of nearby Wi-Fi locations.
+- **Saved:** Read saved Wi-Fi locations and their coordinates without an internet connection, including an offline schematic locator (not a street map). Reopen a saved area in the live map when online.
 - **Coverage:** The interface includes 4G/5G and operator choices, but **does not show or invent coverage predictions until an authorised Ofcom source is connected**.
 
 Data is incomplete and user-contributed; *unknown* does not mean free, and *mapped* does not mean recently tested. Wi-Fi records are sourced from OSM through an Overpass API query. Signal does not claim Wi-Fi is working or that it's suitable to use securely.
@@ -24,7 +24,7 @@ npm run dev
 
 Visit http://localhost:3000. Run `npm run typecheck`, `npm test` and `npm run build` before releasing.
 
-Deploy on Vercel with the normal Next.js framework preset. No credentials are needed for this alpha. Overpass and postcodes.io are external dependencies; public endpoint use should be replaced with an appropriate hosted/cache-backed source as traffic grows.
+Deploy on Vercel with the normal Next.js framework preset. No credentials are needed for this alpha. The Overpass responses are cached for 15 minutes and map movement requests are debounced. Overpass and postcodes.io are external dependencies; public endpoint use should be replaced with an appropriate hosted/cache-backed source as traffic grows.
 
 ## Data and offline limitations
 

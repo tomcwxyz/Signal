@@ -17,3 +17,9 @@ export function sortByDistance(places: WiFiPlace[], centre: LatLon): WiFiPlace[]
 export function prettyDistance(distance: number): string {
   return distance < 1000 ? Math.round(distance) + " m" : (distance / 1000).toFixed(1) + " km";
 }
+
+// A saved result is safe to use at the centre only when the returned search
+// genuinely covers it; avoid silently attaching a previous town's locations.
+export function snapshotCovers(centre: LatLon, fetchedCentre: LatLon, maximumMetres = 950): boolean {
+  return distanceMetres(centre, fetchedCentre) <= maximumMetres;
+}

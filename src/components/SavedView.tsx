@@ -9,8 +9,9 @@ type Props = {
   setOpenId: (id: string | null) => void;
   onDelete: (id: string) => Promise<void>;
   online: boolean;
+  onOpenMap: (area: SavedArea) => void;
 };
-export default function SavedView({ areas, openId, setOpenId, onDelete, online }: Props) {
+export default function SavedView({ areas, openId, setOpenId, onDelete, online, onOpenMap }: Props) {
   const open = areas.find(area => area.id === openId);
   return <section className="saved-view" aria-label="Saved areas">
     <div className="saved-heading"><span className="eyebrow">YOUR OFFLINE POCKET</span><h1>Saved areas</h1>
@@ -25,7 +26,7 @@ export default function SavedView({ areas, openId, setOpenId, onDelete, online }
         <button className="icon-button delete-area" onClick={() => onDelete(area.id)} aria-label={"Remove " + area.label}><Trash2 size={17}/></button>
       </article>)}</div>
       {open && <div className="saved-detail"><OfflineDiagram area={open}/>
-        <h2>Places in {open.label}</h2>
+        <div className="saved-subheader"><h2>Places in {open.label}</h2>{online && <button className="go-to-map" onClick={() => onOpenMap(open)}>View on live map →</button>}</div>
         <p className="muted text-small">Saved {new Date(open.savedAt).toLocaleString("en-GB")} · {online ? "You're online, but this is your saved snapshot." : "Currently offline"}</p>
         {open.places.length === 0 ? <p>No Wi-Fi locations were in this saved snapshot.</p> :
         <ol className="saved-places">{sortByDistance(open.places, open.centre).slice(0, 60).map(place => <li key={place.id}>
