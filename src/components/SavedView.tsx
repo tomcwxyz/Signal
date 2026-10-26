@@ -29,6 +29,7 @@ export default function SavedView({ areas, openId, setOpenId, onDelete, online, 
       {open && <div className="saved-detail"><OfflineDiagram area={open}/>
         <div className="saved-subheader"><h2>Places in {open.label}</h2>{online && <button className="go-to-map" onClick={() => onOpenMap(open)}>View on live map →</button>}</div>
         <p className="muted text-small">Saved {new Date(open.savedAt).toLocaleString("en-GB")} · {online ? "You're online, but this is your saved snapshot." : "Currently offline"}</p>
+        {snapshotNeedsReview(open) && <p className="stale-notice">These details were saved {ageInDays(open.savedAt) ?? "many"} days ago. Availability may have changed; refresh the live map when online.</p>}
         {open.places.length === 0 ? <p>No Wi-Fi locations were in this saved snapshot.</p> :
         <ol className="saved-places">{sortByDistance(open.places, open.centre).slice(0, 60).map(place => <li key={place.id}>
           <div><strong>{place.name}</strong><small>{place.access === "free" ? "Tagged free" : place.access === "unknown" ? "Cost unconfirmed" : place.access === "customers" ? "Customers only" : "Paid"} · {prettyDistance(distanceMetres(open.centre, place))} from centre</small><small>{place.openingHours ? "Hours: " + place.openingHours : "Opening hours not recorded"}</small><small>{place.lat.toFixed(5)}, {place.lon.toFixed(5)}</small></div>
