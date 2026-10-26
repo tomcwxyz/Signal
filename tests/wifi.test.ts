@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { classifyWiFiAccess, normaliseWiFi } from "../src/lib/wifi";
 import { distanceMetres, snapshotCovers, validCoordinates } from "../src/lib/geo";
 import { parseSharedMap, sharedMapPath } from "../src/lib/shared-map";
+import { ageInDays } from "../src/lib/snapshot";
 test("never represents unknown fees as free", () => {
   assert.equal(classifyWiFiAccess({ internet_access: "wlan" }), "unknown");
   assert.equal(classifyWiFiAccess({ "internet_access:fee": "no" }), "free");
@@ -40,4 +41,10 @@ test("shareable map link round-trips a UK location without sharing precise user 
 test("invalid or overseas deep links do not change map position", () => {
   assert.equal(parseSharedMap(new URLSearchParams("lat=0&lon=0")), null);
   assert.equal(parseSharedMap(new URLSearchParams("lat=a&lon=b")), null);
+});
+
+test("offline snapshots retain a sensible age for user warnings", () => {
+  const now = new Date("2026-10-26T12:00:00Z");
+  assert.equal(ageInDays("2026-10-01T12:00:00Z", now), 25);
+  assert.equal(ageInDays("invalid", now), null);
 });

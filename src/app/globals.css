@@ -32,3 +32,5 @@
 
 .map-action{display:flex;gap:8px;flex-wrap:wrap}
 @media(max-width:370px){.map-action{max-width:calc(100vw - 90px)}.location-button{font-size:11px;padding:10px}}
+
+.stale-notice{background:#fff8e9;color:#916827;border:1px solid #eed8a4;font-size:12px;line-height:1.5;border-radius:10px;padding:12px;margin:12px 0}

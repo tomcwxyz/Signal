@@ -3,6 +3,7 @@ import { Download, MapPin, Trash2, WifiOff } from "lucide-react";
 import type { SavedArea } from "@/lib/types";
 import { distanceMetres, prettyDistance, sortByDistance } from "@/lib/geo";
 import OfflineDiagram from "./OfflineDiagram";
+import { ageInDays, snapshotNeedsReview } from "@/lib/snapshot";
 type Props = {
   areas: SavedArea[];
   openId: string | null;
@@ -21,7 +22,7 @@ export default function SavedView({ areas, openId, setOpenId, onDelete, online, 
     {areas.length === 0 ? <div className="saved-empty"><Download size={34}/><h2>Nothing saved yet</h2><p>Go to Here or Plan, explore a place, then choose <strong>Save Wi-Fi list</strong>.</p></div> :
       <div className="saved-layout"><div className="saved-cards">{areas.map(area => <article key={area.id} className={"area-card" + (open?.id === area.id ? " active" : "")}>
         <button className="area-open" onClick={() => setOpenId(open?.id === area.id ? null : area.id)}>
-          <MapPin size={20}/><span><strong>{area.label}</strong><small>{area.places.length} Wi-Fi places · Saved {new Date(area.savedAt).toLocaleDateString("en-GB")}</small></span>
+          <MapPin size={20}/><span><strong>{area.label}</strong><small>{area.places.length} Wi-Fi places · Saved {new Date(area.savedAt).toLocaleDateString("en-GB")}{snapshotNeedsReview(area) ? " · May be outdated" : ""}</small></span>
         </button>
         <button className="icon-button delete-area" onClick={() => onDelete(area.id)} aria-label={"Remove " + area.label}><Trash2 size={17}/></button>
       </article>)}</div>

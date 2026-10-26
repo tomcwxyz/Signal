@@ -44,3 +44,7 @@ Deploy on Vercel with the normal Next.js framework preset. No credentials are ne
 ## Attribution
 
 Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL. Wi-Fi features retain their original OSM references. This repository currently has no software licence attached; permission to reuse code is not implied by the repository being public.
+
+## Offline data safety
+
+Offline saves live in this device's browser storage. Signal asks the browser to keep the storage persistent where supported; the browser can still clear data, and users should not assume saved spots are permanent. The Saved screen flags snapshots older than 30 days for review. No Wi-Fi logins, credentials or exact location histories are collected.

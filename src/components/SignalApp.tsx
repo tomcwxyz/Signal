@@ -137,7 +137,9 @@ export default function SignalApp() {
         id: crypto.randomUUID(), label: areaLabel.trim() || "Saved map area", centre, places: result.places,
         savedAt: new Date().toISOString(), radiusMetres: FETCH_RADIUS_METRES
       };
-      await saveArea(area); await refreshAreas(); setNotice("Saved " + area.places.length + " Wi-Fi locations for offline use. Street map not included.");
+      await saveArea(area);
+      if (navigator.storage?.persist) await navigator.storage.persist().catch(() => false);
+      await refreshAreas(); setNotice("Saved " + area.places.length + " Wi-Fi locations for offline use. Street map not included.");
     } catch { setNotice("Couldn't save this area. Check your browser's storage settings."); }
     finally { setSaving(false); }
   };
@@ -186,7 +188,7 @@ export default function SignalApp() {
             {selected && showWiFi && zoom >= 11 && online && !fetchError && <div className="place-detail"><span className="eyebrow">SELECTED CONNECTION</span><h3>{selected.name}</h3><div className="detail-access"><span className={"access-tag " + selected.access}>{ACCESS[selected.access]}</span><span>{prettyDistance(distanceMetres(centre, selected))} away</span></div><p>Opening hours: {selected.openingHours ?? "Not recorded"}. Availability and security have not been verified.</p><div className="detail-actions"><a target="_blank" rel="noopener noreferrer" href={selected.osmUrl}>View OSM record <ExternalLink size={14}/></a>{selected.website && <a target="_blank" rel="noopener noreferrer" href={selected.website}>Website <ExternalLink size={14}/></a>}</div></div>}
             <label className="save-area-label" htmlFor="saved-area-name">Name this saved area</label><input id="saved-area-name" className="save-name-input" maxLength={80} value={areaLabel} onChange={event => setAreaLabel(event.target.value)}/>
             <button className="save-button" onClick={storeArea} disabled={saving || !online || !resultIsLocal || loading || zoom < 11}><BookmarkPlus size={19}/>{saving ? "Saving…" : "Save Wi-Fi list for offline use"}</button>
-            <p className="save-explainer">Saves Wi-Fi place information on this device. Does not download map tiles or mobile coverage.</p>
+            <p className="save-explainer">Stored in this browser. Clearing site data removes saved places. No street tiles or mobile coverage are downloaded.</p>
           </section>
         </div>
       </>}
