@@ -34,3 +34,32 @@
 @media(max-width:370px){.map-action{max-width:calc(100vw - 90px)}.location-button{font-size:11px;padding:10px}}
 
 .stale-notice{background:#fff8e9;color:#916827;border:1px solid #eed8a4;font-size:12px;line-height:1.5;border-radius:10px;padding:12px;margin:12px 0}
+
+/* Leaflet renders real raster map tiles in an ordinary DOM layer, no WebGL required. */
+.map-canvas.leaflet-container { height:100%; width:100%; background:#e5f0ec; font:inherit; }
+.signal-leaflet-marker { background:transparent;border:none; }
+.signal-leaflet-marker .signal-marker-inner {
+  display:grid;place-items:center;width:37px;height:37px;border:3px solid #fff;
+  border-radius:13px;background:#1478c1;color:#fff;
+  box-shadow:0 3px 12px #15384866;transition:transform .15s ease;
+}
+.signal-leaflet-marker .signal-marker-inner svg {width:21px;height:21px}
+.signal-leaflet-marker.selected .signal-marker-inner {background:#123b4b;outline:3px solid #9fd4f0;transform:scale(1.07)}
+.signal-leaflet-marker.restricted .signal-marker-inner {background:#738b9a}
+.leaflet-container .leaflet-control-attribution { font-size:10px;opacity:.93 }
+.leaflet-container .leaflet-control-attribution a {color:#215777;text-decoration:underline}
+.leaflet-container .leaflet-control-zoom {margin-bottom:38px;margin-right:10px;border:1px solid #dee7eb;box-shadow:0 3px 12px #173b4525}
+.leaflet-container .leaflet-control-zoom a {color:#234c62}
+.map-error{z-index:5;inset:auto 12px 13px 12px;border:1px solid #ebc889;box-shadow:0 5px 22px #203c5125;
+ background:#fffbef;border-radius:13px;display:block;text-align:left;padding:14px 16px;color:#6e4e1f}
+.map-error p{font-size:12px;line-height:1.5;margin:7px 0}
+.map-error-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.map-error-actions button{background:#164b6c;border:0;color:white;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:700}
+.map-error-actions a{text-decoration:underline;font-size:12px}
+.map-loading{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%);z-index:1;
+ background:#fffffff0;border:1px solid #dce5e7;color:#4b6877;border-radius:99px;padding:10px 15px;font-size:11px}
+.map-overlay{z-index:401}
+.map-action{z-index:402}
+@media (max-width:700px){.map-error{left:10px;right:10px;bottom:9px;padding:10px 12px}
+ .map-error-actions button{padding:7px 10px}
+ .leaflet-container .leaflet-control-attribution{max-width:205px;font-size:9px}}
