@@ -1,10 +1,11 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { ArrowRight, BookmarkPlus, Compass, Download, ExternalLink, LocateFixed, MapPin, Search, ShieldAlert, Wifi, WifiOff } from "lucide-react";
+import { ArrowRight, BookmarkPlus, Compass, Download, ExternalLink, LocateFixed, MapPin, Search, Share2, ShieldAlert, Wifi, WifiOff } from "lucide-react";
 import SignalMap from "./SignalMap";
 import SavedView from "./SavedView";
 import { DEFAULT_CENTRE, FETCH_RADIUS_METRES, distanceMetres, prettyDistance, snapshotCovers, sortByDistance, validCoordinates } from "@/lib/geo";
 import { getCoverageState } from "@/lib/coverage";
+import { parseSharedMap, sharedMapPath } from "@/lib/shared-map";
 import { listAreas, removeArea, saveArea } from "@/lib/saved-areas";
 import type { LatLon, MobileNetwork, MobileTechnology, SavedArea, WiFiPlace, WiFiResult } from "@/lib/types";
 type Tab = "here" | "plan" | "saved";
@@ -36,6 +37,16 @@ export default function SignalApp() {
   const coverage = getCoverageState(network, technology);
   const refreshAreas = useCallback(async () => {
     try { setAreas(await listAreas()); } catch { setNotice("Offline storage is unavailable in this browser."); }
+  }, []);
+  useEffect(() => {
+    const shared = parseSharedMap(new URLSearchParams(window.location.search));
+    if (shared) {
+      setCentre(shared.centre);
+      setZoom(shared.zoom);
+      setFocus(previous => ({ ...shared.centre, zoom: shared.zoom, version: previous.version + 1 }));
+      setAreaLabel("Shared map area");
+      setTab("plan");
+    }
   }, []);
   useEffect(() => {
     const sync = () => setOnline(navigator.onLine);
@@ -81,6 +92,21 @@ export default function SignalApp() {
     setZoom(old => Math.floor(old) === Math.floor(level) ? old : level);
     if (distanceMetres(location, focus) > 1300) setAreaLabel("Map near " + location.lat.toFixed(3) + ", " + location.lon.toFixed(3));
   }, [focus]);
+  const shareLocation = async () => {
+    const url = window.location.origin + sharedMapPath(centre, zoom);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Signal map", text: "Find connectivity in this area", url });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        setNotice("Map link copied. It opens this location in Signal.");
+      } else {
+        setNotice("Sharing is unavailable in this browser.");
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name !== "AbortError") setNotice("Couldn't share the map link.");
+    }
+  };
   const useLocation = () => {
     if (!navigator.geolocation) { setNotice("This browser doesn't support location services."); return; }
     setGeolocating(true);
@@ -138,7 +164,7 @@ export default function SignalApp() {
         <div className="explorer">
           <div className="map-column">
             <SignalMap focus={focus} places={visible} selectedId={selected?.id ?? null} showWiFi={showWiFi} onSelect={setSelectedId} onViewChange={handleViewChange}/>
-            <div className="map-action"><button className="location-button" onClick={useLocation} disabled={geolocating}><LocateFixed size={18}/>{geolocating ? "Locating…" : "Use my location"}</button></div>
+            <div className="map-action"><button className="location-button" onClick={shareLocation} title="Share this map location"><Share2 size={17}/>Share area</button><button className="location-button" onClick={useLocation} disabled={geolocating}><LocateFixed size={18}/>{geolocating ? "Locating…" : "Use my location"}</button></div>
           </div>
           <section className="info-column">
             <div className="section-lead"><span className="eyebrow">{tab === "here" ? "EXPLORE NEARBY" : "PLAN YOUR CONNECTION"}</span><h1>{tab === "here" ? "Stay connected." : "Know before you go."}</h1><p><MapPin size={15}/>{areaLabel}</p></div>

@@ -6,7 +6,7 @@ Signal is an open, mobile-first UK connectivity map. Its first alpha focuses on 
 
 ## Alpha 1
 
-- **Here:** Explore the map, find public Wi-Fi locations from OpenStreetMap and inspect access conditions.
+- **Here:** Explore the map, find public Wi-Fi locations from OpenStreetMap, inspect access conditions and share a link to a selected area.
 - **Plan:** Search a UK postcode, move the map, filter by Wi-Fi access and save a named snapshot of nearby Wi-Fi locations.
 - **Saved:** Read saved Wi-Fi locations and their coordinates without an internet connection, including an offline schematic locator (not a street map). Reopen a saved area in the live map when online.
 - **Coverage:** The interface includes 4G/5G and operator choices, but **does not show or invent coverage predictions until an authorised Ofcom source is connected**.
@@ -30,7 +30,7 @@ Deploy on Vercel with the normal Next.js framework preset. No credentials are ne
 
 - The live base map uses OpenStreetMap's standard interactive **online** raster tiles. Signal never prefetches those tiles for offline use. OSM's [tile policy](https://operations.osmfoundation.org/policies/tiles/) prohibits such downloads.
 - Saving an area stores its currently fetched Wi-Fi place list locally in IndexedDB. It does **not** download street maps or predicted mobile coverage. Saved records have a timestamp and may become stale.
-- Offline area diagrams show relative hotspot positions, not streets, road access or directions. GPS may work offline on some devices but is not guaranteed.
+- Offline area diagrams show relative hotspot positions, not streets, road access or directions. The service worker precaches the initial application shell and locally served Next.js assets; it does not cache external tiles. GPS may work offline on some devices but is not guaranteed.
 - Ofcom's replacement mobile coverage APIs require developer access. Integration is deliberately deferred until response schemas, terms and credentials are verified.
 - Location is requested only when the user taps "Use my location"; Signal does not store location on a server.
 

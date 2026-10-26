@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { classifyWiFiAccess, normaliseWiFi } from "../src/lib/wifi";
 import { distanceMetres, snapshotCovers, validCoordinates } from "../src/lib/geo";
+import { parseSharedMap, sharedMapPath } from "../src/lib/shared-map";
 test("never represents unknown fees as free", () => {
   assert.equal(classifyWiFiAccess({ internet_access: "wlan" }), "unknown");
   assert.equal(classifyWiFiAccess({ "internet_access:fee": "no" }), "free");
@@ -26,4 +27,17 @@ test("saved Wi-Fi list cannot be used as if it were fetched for a distant town",
 });
 test("customer access takes precedence even if a no-fee tag is present", () => {
   assert.equal(classifyWiFiAccess({ access: "customers", "internet_access:fee": "no" }), "customers");
+});
+
+test("shareable map link round-trips a UK location without sharing precise user location implicitly", () => {
+  const original = { lat: 54.617, lon: -1.577 };
+  const path = sharedMapPath(original, 12.5);
+  const result = parseSharedMap(new URL("https://example.org" + path).searchParams);
+  assert.equal(result?.centre.lat, original.lat);
+  assert.equal(result?.centre.lon, original.lon);
+  assert.equal(result?.zoom, 13);
+});
+test("invalid or overseas deep links do not change map position", () => {
+  assert.equal(parseSharedMap(new URLSearchParams("lat=0&lon=0")), null);
+  assert.equal(parseSharedMap(new URLSearchParams("lat=a&lon=b")), null);
 });

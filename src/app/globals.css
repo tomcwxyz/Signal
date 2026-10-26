@@ -29,3 +29,6 @@
 .save-name-input{margin-top:6px;width:100%;font-size:13px;border:1px solid #d4e3e9;border-radius:11px;padding:11px 12px;color:#173f53;background:#fff}
 .saved-subheader{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .go-to-map{background:#eaf4f9;color:#176aa3;border:1px solid #cce4f0;border-radius:9px;padding:9px 12px;font-weight:800;font-size:11px}
+
+.map-action{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:370px){.map-action{max-width:calc(100vw - 90px)}.location-button{font-size:11px;padding:10px}}
