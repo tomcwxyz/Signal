@@ -2,35 +2,63 @@ import { NextRequest, NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 import { z } from "zod";
 import { validCoordinates } from "@/lib/geo";
-import { normaliseWiFi, type OverpassElement } from "@/lib/wifi";
+import { WIFI_SEARCH_RADIUS_METRES, normaliseOverpassResults, overpassQuery } from "@/lib/wifi-query";
+import type { OverpassElement } from "@/lib/wifi";
+
+export const maxDuration = 30;
 
 const schema = z.object({ lat: z.coerce.number().finite(), lon: z.coerce.number().finite() });
-const source = "https://overpass.private.coffee/api/interpreter";
-// Public Overpass is suitable only for a cautious, low-traffic alpha.
-// Cache by rounded coordinates for 15 minutes; a proper UK import is next.
-const queryOverpass = unstable_cache(async (lat: number, lon: number) => {
-  const query = '[out:json][timeout:20];nwr(around:3000,' + lat + ',' + lon + ')["internet_access"="wlan"];out center tags;';
-  const response = await fetch(source, {
+const endpoints = [
+  "https://overpass.private.coffee/api/interpreter",
+  "https://overpass-api.de/api/interpreter"
+] as const;
+
+type OverpassResponse = {
+  elements: OverpassElement[];
+  osm3s?: { timestamp_osm_base?: string };
+};
+
+async function getElements(url: string, data: string): Promise<OverpassResponse> {
+  const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-      "User-Agent": "Signal/0.2 (+https://github.com/tomcwxyz/Signal)"
+      "User-Agent": "Signal-WiFi-Alpha/0.3 (+https://github.com/tomcwxyz/Signal)"
     },
-    body: new URLSearchParams({ data: query }),
-    signal: AbortSignal.timeout(23000),
+    body: new URLSearchParams({ data }),
+    signal: AbortSignal.timeout(11500),
     cache: "no-store"
   });
-  if (!response.ok) throw new Error("Overpass temporarily unavailable");
+  if (!response.ok) throw new Error("Overpass " + response.status);
   const raw: unknown = await response.json();
   if (!raw || typeof raw !== "object" || !("elements" in raw) || !Array.isArray(raw.elements)) {
-    throw new Error("Invalid upstream data");
+    throw new Error("Invalid Overpass response");
   }
-  const places = (raw.elements as OverpassElement[])
-    .slice(0, 700)
-    .map(element => normaliseWiFi(element))
-    .filter((place): place is NonNullable<typeof place> => place !== null);
-  return { places, centre: { lat, lon }, fetchedAt: new Date().toISOString(), source: "OpenStreetMap" as const };
-}, ["signal-wifi-v2"], { revalidate: 900 });
+  return raw as OverpassResponse;
+}
+
+// Requests for the same 0.01-degree cell share this 15-minute cached result.
+const queryOverpass = unstable_cache(async (lat: number, lon: number) => {
+  const centre = { lat, lon };
+  const query = overpassQuery(centre);
+  for (const endpoint of endpoints) {
+    try {
+      const data = await getElements(endpoint, query);
+      const { places, matches, limited } = normaliseOverpassResults(data.elements, centre);
+      return {
+        places, centre, matches, limited,
+        fetchedAt: new Date().toISOString(),
+        osmDataAt: data.osm3s?.timestamp_osm_base ?? null,
+        radiusMetres: WIFI_SEARCH_RADIUS_METRES,
+        source: "OpenStreetMap" as const
+      };
+    } catch (err) {
+      console.warn("Signal Wi-Fi: upstream source failed", new URL(endpoint).host,
+        err instanceof Error ? err.message : "Unknown error");
+    }
+  }
+  throw new Error("Wi-Fi data sources are unavailable");
+}, ["signal-wifi-v3"], { revalidate: 900 });
 
 export async function GET(request: NextRequest) {
   const parsed = schema.safeParse(Object.fromEntries(request.nextUrl.searchParams));
@@ -44,8 +72,10 @@ export async function GET(request: NextRequest) {
       headers: { "Cache-Control": "public, s-maxage=900, stale-while-revalidate=3600" }
     });
   } catch {
-    return NextResponse.json({ error: "Wi-Fi records are temporarily unavailable. Your saved places still work offline." }, {
-      status: 503, headers: { "Cache-Control": "no-store", "Retry-After": "60" }
-    });
+    return NextResponse.json({
+      error: "The live OpenStreetMap Wi-Fi feed is not responding. Try again shortly; saved places still work offline.",
+      source: "OpenStreetMap",
+      status: "unavailable"
+    }, { status: 503, headers: { "Cache-Control": "no-store", "Retry-After": "60" } });
   }
 }

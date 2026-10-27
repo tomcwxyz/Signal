@@ -11,7 +11,7 @@ test("never represents unknown fees as free", () => {
   assert.equal(classifyWiFiAccess({ "internet_access:fee": "yes" }), "paid");
 });
 test("ways use their returned centre and unsafe websites are stripped", () => {
-  const place = normaliseWiFi({ type: "way", id: 42, center: { lat: 54.6, lon: -1.6 }, tags: { name: "Library", website: "javascript:alert(1)" } });
+  const place = normaliseWiFi({ type: "way", id: 42, center: { lat: 54.6, lon: -1.6 }, tags: { name: "Library", internet_access: "wlan", website: "javascript:alert(1)" } });
   assert.equal(place?.name, "Library");
   assert.equal(place?.website, undefined);
   assert.equal(place?.osmUrl, "https://www.openstreetmap.org/way/42");

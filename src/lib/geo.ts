@@ -1,6 +1,6 @@
 import type { LatLon, WiFiPlace } from "./types";
 export const DEFAULT_CENTRE: LatLon = { lat: 54.617, lon: -1.577 };
-export const FETCH_RADIUS_METRES = 3000;
+export const FETCH_RADIUS_METRES = 5000;
 export function validCoordinates({ lat, lon }: LatLon): boolean {
   return Number.isFinite(lat) && Number.isFinite(lon) && lat >= 49 && lat <= 61.2 && lon >= -9 && lon <= 2.5;
 }

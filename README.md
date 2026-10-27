@@ -6,14 +6,14 @@ Signal is an open, mobile-first UK connectivity map. Its first alpha focuses on 
 
 ## Alpha 1
 
-**Map renderer:** Leaflet with OSM raster tiles, requiring no WebGL. Tile failures/timeouts produce a visible retry and OSM fallback link rather than a blank panel. This was changed after a mobile WebView rendered a blank Leaflet canvas.
+**Map renderer:** Leaflet with OSM raster tiles, requiring no WebGL. Tile failures/timeouts produce a visible retry and OSM fallback link rather than a blank panel. This was changed after a mobile WebView rendered a blank MapLibre canvas.
 
 - **Here:** Explore the map, find public Wi-Fi locations from OpenStreetMap, inspect access conditions and share a link to a selected area.
 - **Plan:** Search a UK postcode, move the map, filter by Wi-Fi access and save a named snapshot of nearby Wi-Fi locations.
 - **Saved:** Read saved Wi-Fi locations and their coordinates without an internet connection, including an offline schematic locator (not a street map). Reopen a saved area in the live map when online.
 - **Coverage:** The interface includes 4G/5G and operator choices, but **does not show or invent coverage predictions until an authorised Ofcom source is connected**.
 
-Data is incomplete and user-contributed; *unknown* does not mean free, and *mapped* does not mean recently tested. Wi-Fi records are sourced from OSM through an Overpass API query. Signal does not claim Wi-Fi is working or that it's suitable to use securely.
+Data is incomplete and user-contributed; Signal queries both `internet_access=wlan` and `wifi=yes/free` tags within a 5 km radius, and uses a backup public Overpass endpoint if the primary fails. *Unknown* does not mean free, and *mapped* does not mean recently tested. Wi-Fi records are sourced from OSM through an Overpass API query. Signal does not claim Wi-Fi is working or that it's suitable to use securely.
 
 ## Develop
 
