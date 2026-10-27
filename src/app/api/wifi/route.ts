@@ -9,6 +9,9 @@ export const maxDuration = 30;
 
 const schema = z.object({ lat: z.coerce.number().finite(), lon: z.coerce.number().finite() });
 const endpoints = [
+  // Confirmed live against both Newton Aycliffe and Newcastle on 27 Oct 2026.
+  // Region-specific service: Britain and Ireland data only.
+  "https://overpass.atownsend.org.uk/api/interpreter",
   "https://overpass.private.coffee/api/interpreter",
   "https://overpass-api.de/api/interpreter"
 ] as const;
@@ -58,7 +61,7 @@ const queryOverpass = unstable_cache(async (lat: number, lon: number) => {
     }
   }
   throw new Error("Wi-Fi data sources are unavailable");
-}, ["signal-wifi-v3"], { revalidate: 900 });
+}, ["signal-wifi-v4-uk-primary"], { revalidate: 900 });
 
 export async function GET(request: NextRequest) {
   const parsed = schema.safeParse(Object.fromEntries(request.nextUrl.searchParams));

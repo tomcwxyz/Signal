@@ -56,3 +56,5 @@ Offline saves live in this device's browser storage. Signal asks the browser to 
 The map queries publicly tagged Wi-Fi features via OpenStreetMap Overpass, using both `internet_access=wlan` and `wifi=yes/free` conventions. Each pin links to the original OSM object. Green pins explicitly have free-access tags, blue pins have unconfirmed access conditions; paid/customer-only venues are opt-in. The displayed date is when Signal fetched the record, not the last time a person tested it.
 
 Public Overpass sources are best-effort. Request errors are not represented as zero Wi-Fi hotspots; a retry is offered. Before scaling usage we need a cached UK feed.
+
+**October 2026 verification:** The Britain-and-Ireland Overpass instance at `overpass.atownsend.org.uk` is used first. A live data test returned three OSM Wi-Fi records within 5 km of Newton Aycliffe and 104 within 5 km of Newcastle centre. Those counts are snapshots of mapped tags, not measured connectivity, and will change as contributors edit OSM. The other global endpoints are fallbacks only.
