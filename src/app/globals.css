@@ -63,3 +63,11 @@
 @media (max-width:700px){.map-error{left:10px;right:10px;bottom:9px;padding:10px 12px}
  .map-error-actions button{padding:7px 10px}
  .leaflet-container .leaflet-control-attribution{max-width:205px;font-size:9px}}
+
+.signal-leaflet-marker.free .signal-marker-inner{background:#0c956e}
+.map-data-count{position:absolute;top:14px;right:14px;z-index:402;display:flex;flex-direction:column;align-items:flex-start;gap:4px;border:1px solid #dbe9eb;border-radius:13px;padding:11px 13px;color:#18485a;background:#fffefb;box-shadow:0 4px 16px #1a485225;text-align:left}
+.map-data-count strong{font-size:12px}.map-data-count small{color:#67818d;font-size:10px}
+.map-legend{position:absolute;left:14px;bottom:96px;z-index:402;display:flex;gap:13px;border:1px solid #dde7e9;background:#ffffffed;box-shadow:0 3px 12px #1a48521c;border-radius:10px;padding:8px 10px;font-size:10px;color:#4e6c78}
+.map-legend span{display:flex;align-items:center;gap:5px}.legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#197bc1}.legend-dot.free{background:#0c956e}
+.source-explainer{margin:8px 0 5px;color:#6a8290;font-size:11px;line-height:1.5}.wifi-heading{scroll-margin-top:12px}
+@media(max-width:700px){.map-data-count{top:10px;right:10px;padding:8px 10px}.map-data-count strong{font-size:11px}.map-data-count small{font-size:9px}.map-legend{left:10px;bottom:78px;font-size:9px;padding:6px 8px;gap:8px}}

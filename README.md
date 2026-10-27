@@ -50,3 +50,9 @@ Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright
 ## Offline data safety
 
 Offline saves live in this device's browser storage. Signal asks the browser to keep the storage persistent where supported; the browser can still clear data, and users should not assume saved spots are permanent. The Saved screen flags snapshots older than 30 days for review. No Wi-Fi logins, credentials or exact location histories are collected.
+
+## Wi-Fi provenance
+
+The map queries publicly tagged Wi-Fi features via OpenStreetMap Overpass, using both `internet_access=wlan` and `wifi=yes/free` conventions. Each pin links to the original OSM object. Green pins explicitly have free-access tags, blue pins have unconfirmed access conditions; paid/customer-only venues are opt-in. The displayed date is when Signal fetched the record, not the last time a person tested it.
+
+Public Overpass sources are best-effort. Request errors are not represented as zero Wi-Fi hotspots; a retry is offered. Before scaling usage we need a cached UK feed.

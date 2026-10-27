@@ -27,6 +27,7 @@ export default function SignalApp() {
   const [loading, setLoading] = useState(false);
   const [freeOnly, setFreeOnly] = useState(false);
   const [fetchError, setFetchError] = useState("");
+  const [refreshToken, setRefreshToken] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [online, setOnline] = useState(true);
   const [areas, setAreas] = useState<SavedArea[]>([]);
@@ -76,12 +77,14 @@ export default function SignalApp() {
       .catch(error => { if (!abort.signal.aborted) { setFetchError(error instanceof Error ? error.message : "Unable to load Wi-Fi spots"); setResult(null); } })
       .finally(() => { if (!abort.signal.aborted) setLoading(false); }), 650);
     return () => { clearTimeout(timeout); abort.abort(); };
-  }, [centre.lat, centre.lon, zoom, online, tab]);
+  }, [centre.lat, centre.lon, zoom, online, tab, refreshToken]);
   const resultIsLocal = Boolean(result && snapshotCovers(centre, result.centre));
   const visible = useMemo(() => sortByDistance(
     result && snapshotCovers(centre, result.centre) ?
       result.places.filter(place => (includeRestricted || place.access === "free" || place.access === "unknown") && (!freeOnly || place.access === "free")) : [], centre
   ), [result, includeRestricted, freeOnly, centre]);
+  const freeCount = visible.filter(place => place.access === "free").length;
+  const dataStatus = !online ? "offline" : zoom < 11 ? "zoom" : loading ? "loading" : fetchError ? "error" : resultIsLocal ? "ready" : "loading";
   const selected = visible.find(place => place.id === selectedId) ?? visible[0];
   const focusOn = (location: LatLon, label: string, level = 13) => {
     setCentre(location); setZoom(level); setFocus(previous => ({ ...location, zoom: level, version: previous.version + 1 })); setAreaLabel(label); setSelectedId(null);
@@ -92,6 +95,7 @@ export default function SignalApp() {
     setZoom(old => Math.floor(old) === Math.floor(level) ? old : level);
     if (distanceMetres(location, focus) > 1300) setAreaLabel("Map near " + location.lat.toFixed(3) + ", " + location.lon.toFixed(3));
   }, [focus]);
+  const retryWiFi = () => { setFetchError(""); setRefreshToken(token => token + 1); };
   const shareLocation = async () => {
     const url = window.location.origin + sharedMapPath(centre, zoom);
     try {
@@ -165,7 +169,7 @@ export default function SignalApp() {
         {tab === "plan" && <form className="plan-bar" onSubmit={searchPostcode}><Search size={18}/><input aria-label="Enter a UK postcode" value={postcode} onChange={event => setPostcode(event.target.value)} placeholder="Plan ahead — enter a UK postcode" autoComplete="postal-code"/><button className="small-primary" type="submit" disabled={searching}>{searching ? "Finding…" : "Find"} <ArrowRight size={15}/></button></form>}
         <div className="explorer">
           <div className="map-column">
-            <SignalMap focus={focus} places={visible} selectedId={selected?.id ?? null} showWiFi={showWiFi} onSelect={setSelectedId} onViewChange={handleViewChange}/>
+            <SignalMap focus={focus} places={visible} selectedId={selected?.id ?? null} showWiFi={showWiFi} onSelect={setSelectedId} onViewChange={handleViewChange} wifiStatus={dataStatus} wifiCount={visible.length} freeCount={freeCount} onShowConnections={() => document.getElementById("wifi-results")?.scrollIntoView({ behavior: "smooth", block: "start" })}/>
             <div className="map-action"><button className="location-button" onClick={shareLocation} title="Share this map location"><Share2 size={17}/>Share area</button><button className="location-button" onClick={useLocation} disabled={geolocating}><LocateFixed size={18}/>{geolocating ? "Locating…" : "Use my location"}</button></div>
           </div>
           <section className="info-column">
@@ -176,12 +180,12 @@ export default function SignalApp() {
             </div>
             <div className="data-options"><div className="tech-pills"><button className={technology === "4G" ? "chosen" : ""} aria-pressed={technology === "4G"} onClick={() => setTechnology("4G")}>4G</button><button className={technology === "5G" ? "chosen" : ""} aria-pressed={technology === "5G"} onClick={() => setTechnology("5G")}>5G</button></div><label className="wifi-toggle"><input type="checkbox" checked={showWiFi} onChange={e => setShowWiFi(e.target.checked)}/><Wifi size={16}/> Wi-Fi pins</label></div>
             <div className="coverage-note"><ShieldAlert size={17}/><p><strong>No signal prediction displayed.</strong> {coverage.network} {coverage.technology} coverage needs an authorised Ofcom feed. <a href="https://www.ofcom.org.uk/phones-and-broadband/coverage-and-speeds/ofcom-checker" target="_blank" rel="noopener noreferrer">Check at Ofcom <ExternalLink size={12}/></a></p></div>
-            <div className="wifi-heading"><div><span className="eyebrow">PUBLIC WI-FI</span><h2>Connections nearby</h2></div><span className="results-count">{loading ? "Looking…" : zoom < 11 ? "Zoom in" : resultIsLocal ? visible.length + " found" : "—"}</span></div>
-            <div className="filter-row"><div className="wifi-filters"><label><input type="checkbox" checked={freeOnly} onChange={event => setFreeOnly(event.target.checked)}/> Only tagged free</label><label><input type="checkbox" checked={includeRestricted} onChange={event => setIncludeRestricted(event.target.checked)}/> Include restricted</label></div><span>{resultIsLocal && result ? "Checked " + new Date(result.fetchedAt).toLocaleDateString("en-GB") : "OSM · unverified"}</span></div>
-            {zoom < 11 ? <p className="list-message">Zoom in or search a postcode to look for Wi-Fi locations within 3 km.</p> : !online ? <p className="list-message">You're offline. Your saved Wi-Fi lists are in <button className="inline-action" onClick={() => setTab("saved")}>Saved</button>.</p> :
+            <div className="wifi-heading" id="wifi-results"><div><span className="eyebrow">MAPPED WI-FI · WITHIN 5 KM</span><h2>Connections nearby</h2></div><span className="results-count">{loading ? "Looking…" : zoom < 11 ? "Zoom in" : resultIsLocal ? visible.length + " found" : "—"}</span></div>
+            <p className="source-explainer">Locations are sourced from OpenStreetMap, not live device scans. Free means tagged free by contributors; availability is not verified.</p><div className="filter-row"><div className="wifi-filters"><label><input type="checkbox" checked={freeOnly} onChange={event => setFreeOnly(event.target.checked)}/> Only tagged free</label><label><input type="checkbox" checked={includeRestricted} onChange={event => setIncludeRestricted(event.target.checked)}/> Include restricted</label></div><span>{resultIsLocal && result ? "OSM data · " + new Date(result.fetchedAt).toLocaleDateString("en-GB") : "OSM · unverified"}</span></div>
+            {zoom < 11 ? <p className="list-message">Zoom in or search a postcode to look for Wi-Fi locations within 5 km.</p> : !online ? <p className="list-message">You're offline. Your saved Wi-Fi lists are in <button className="inline-action" onClick={() => setTab("saved")}>Saved</button>.</p> :
               loading ? <div className="list-message loading-indicator">Looking for mapped Wi-Fi around this area…</div> :
-              fetchError ? <p className="list-message error">{fetchError} <button className="inline-action" onClick={() => focusOn(centre, areaLabel, zoom)}>Try again</button></p> :
-              !resultIsLocal ? <p className="list-message">Search this area to see available Wi-Fi records.</p> : visible.length === 0 ? <p className="list-message">No matching Wi-Fi locations were found in OpenStreetMap around here. That doesn't mean none exist. Try another area or include restricted hotspots.</p> :
+              fetchError ? <p className="list-message error">{fetchError} <button className="inline-action" onClick={retryWiFi}>Try again</button></p> :
+              !resultIsLocal ? <p className="list-message">Search this area to see available Wi-Fi records.</p> : visible.length === 0 ? <p className="list-message">No matching Wi-Fi locations were found in OpenStreetMap around here. That doesn't mean none exist. Try a different location or include restricted hotspots.</p> :
               <div className="places-list">{visible.slice(0, 12).map(place => <button key={place.id} className={"place-row" + (selected?.id === place.id ? " selected" : "")} onClick={() => setSelectedId(place.id)}>
                 <span className="wifi-icon"><Wifi size={19}/></span><span className="place-info"><strong>{place.name}</strong><small>{place.kind} · {prettyDistance(distanceMetres(centre, place))}</small></span><span className={"access-tag " + place.access}>{ACCESS[place.access]}</span>
               </button>)}{visible.length > 12 && <p className="list-message">Showing 12 nearest of {visible.length} mapped places.</p>}</div>}

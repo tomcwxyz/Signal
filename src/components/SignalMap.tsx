@@ -12,6 +12,10 @@ type Props = {
   showWiFi: boolean;
   onSelect: (id: string) => void;
   onViewChange: (centre: LatLon, zoom: number) => void;
+  wifiStatus: "ready" | "loading" | "error" | "offline" | "zoom";
+  wifiCount: number;
+  freeCount: number;
+  onShowConnections: () => void;
 };
 
 const BASEMAP_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -19,7 +23,7 @@ const MAP_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright
 const MARKER_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 9a15 15 0 0 1 18 0M6.5 12.5a10 10 0 0 1 11 0M10 16a4 4 0 0 1 4 0"/><circle cx="12" cy="19.5" r="1.4" fill="currentColor" stroke="none"/></svg>';
 
 /** A deliberately lightweight raster map. No MapLibre/WebGL dependency. */
-export default function SignalMap({ focus, places, selectedId, showWiFi, onSelect, onViewChange }: Props) {
+export default function SignalMap({ focus, places, selectedId, showWiFi, onSelect, onViewChange, wifiStatus, wifiCount, freeCount, onShowConnections }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Leaflet.Map | null>(null);
   const markersRef = useRef<Leaflet.LayerGroup | null>(null);
@@ -111,6 +115,7 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, onSelec
       const classes = [
         "signal-leaflet-marker",
         place.id === selectedId ? "selected" : "",
+        place.access === "free" ? "free" : "",
         place.access === "customers" || place.access === "paid" ? "restricted" : ""
       ].filter(Boolean).join(" ");
       const icon = leaflet.divIcon({
@@ -139,6 +144,16 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, onSelec
         <a target="_blank" rel="noopener noreferrer" href={osmLink}>Open in OpenStreetMap ↗</a>
       </div>
     </div>}
-    <div className="map-overlay"><span className="live-dot" /> Wi-Fi from OpenStreetMap <span className="overlay-extra">· No coverage prediction</span></div>
+    <div className="map-overlay"><span className="live-dot" /> OpenStreetMap <span className="overlay-extra">· Mapped Wi-Fi only</span></div>
+    <button type="button" className="map-data-count" onClick={onShowConnections} aria-label="View Wi-Fi results">
+      {wifiStatus === "ready" ? <><strong>{wifiCount} Wi-Fi places</strong><small>{freeCount} tagged free · View list ↓</small></> :
+       wifiStatus === "loading" ? <><strong>Finding Wi-Fi…</strong><small>Checking OpenStreetMap records</small></> :
+       wifiStatus === "error" ? <><strong>Wi-Fi feed unavailable</strong><small>See error and retry below ↓</small></> :
+       wifiStatus === "offline" ? <><strong>Offline</strong><small>Open Saved for saved locations</small></> :
+       <><strong>Zoom in for Wi-Fi</strong><small>See mapped places nearby</small></>}
+    </button>
+    {showWiFi && wifiStatus === "ready" && wifiCount > 0 && <div className="map-legend" aria-label="Wi-Fi marker legend">
+      <span><i className="legend-dot free"/> Tagged free</span><span><i className="legend-dot unknown"/> Unconfirmed</span>
+    </div>}
   </div>;
 }
