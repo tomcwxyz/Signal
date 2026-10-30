@@ -187,10 +187,6 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, onSelec
     <div className="map-overlay"><span className="live-dot" /> OpenStreetMap
       <span className="overlay-extra">{coverageSamples.length ? " · Ofcom postcode samples" : " · Wi-Fi"}</span>
     </div>
-    {coverageSamples.length > 0 && <div className="coverage-map-overlay" aria-label="Ofcom coverage samples">
-      <strong>{coverageSamples.length} local samples · {coverageOperator === "All" ? "All networks" : coverageOperator}</strong>
-      <span>{showHeat ? "Colour: indicative nearby pattern · dashed: uncertain" : "Shading off · postcode ratings only"}</span>
-    </div>}
     <button type="button" className="map-data-count" onClick={onShowConnections} aria-label="View Wi-Fi results">
       {wifiStatus === "ready" ? <><strong>{wifiCount} Wi-Fi places</strong><small>{freeCount} tagged free · View list ↓</small></> :
        wifiStatus === "loading" ? <><strong>Finding Wi-Fi…</strong><small>Checking OpenStreetMap records</small></> :
