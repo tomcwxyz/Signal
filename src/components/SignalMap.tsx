@@ -6,7 +6,7 @@ import type { LatLon, WiFiPlace } from "@/lib/types";
 import type { LocalCoverageSample } from "@/lib/local-coverage";
 import type { CoverageView } from "@/lib/coverage-visual";
 import { sampleVisual } from "@/lib/coverage-visual";
-import CoverageHeatCanvas from "./CoverageHeatCanvas";
+import CoverageHeatLayer from "./CoverageHeatLayer";
 
 type Focus = LatLon & { zoom: number; version: number };
 type Props = {
@@ -173,7 +173,8 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, onSelec
   const osmLink = "https://www.openstreetmap.org/#map/" + Math.round(focus.zoom) + "/" + focus.lat.toFixed(5) + "/" + focus.lon.toFixed(5);
   return <div className="map-panel">
     <div ref={container} className="map-canvas" aria-label="Interactive map of mobile coverage estimates and Wi-Fi locations" role="region" />
-    <CoverageHeatCanvas map={mapRef.current} samples={coverageSamples} view={coverageOperator} visible={showHeat && renderVersion > 0}/>
+    <CoverageHeatLayer map={mapRef.current} leaflet={leafletRef.current} samples={coverageSamples}
+      view={coverageOperator} visible={showHeat && renderVersion > 0}/>
     {tileStatus === "loading" && <div className="map-loading" role="status">Loading street map…</div>}
     {tileStatus === "failed" && <div className="map-error" role="alert">
       <strong>The street map couldn't load</strong>
@@ -187,10 +188,8 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, onSelec
       <span className="overlay-extra">{coverageSamples.length ? " · Ofcom postcode samples" : " · Wi-Fi"}</span>
     </div>
     {coverageSamples.length > 0 && <div className="coverage-map-overlay" aria-label="Ofcom coverage samples">
-      <strong>{coverageSamples.length} sampled postcodes · {coverageOperator}</strong>
-      <span>{coverageOperator === "All" ? "Number of networks with in-home signal (3–4)" : "0–4: identical score at every property"}</span>
-      <span>+ means at least · ≠ varies · ? unknown</span>
-      <span>Soft shading is illustrative, not an Ofcom coverage raster</span>
+      <strong>{coverageSamples.length} local samples · {coverageOperator === "All" ? "All networks" : coverageOperator}</strong>
+      <span>{showHeat ? "Colour: indicative nearby pattern · dashed: uncertain" : "Shading off · postcode ratings only"}</span>
     </div>}
     <button type="button" className="map-data-count" onClick={onShowConnections} aria-label="View Wi-Fi results">
       {wifiStatus === "ready" ? <><strong>{wifiCount} Wi-Fi places</strong><small>{freeCount} tagged free · View list ↓</small></> :
