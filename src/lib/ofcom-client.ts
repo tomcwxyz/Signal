@@ -91,7 +91,11 @@ export function buildOfcomRequest(postcodeInput: string, environment: OfcomEnvir
  */
 export async function fetchOfcomRawPostcode(
   postcode: string,
-  environment: OfcomEnvironment = process.env,
+  environment: OfcomEnvironment = {
+    OFCOM_API_KEY: process.env.OFCOM_API_KEY,
+    OFCOM_4G5G_POSTCODE_URL: process.env.OFCOM_4G5G_POSTCODE_URL,
+    OFCOM_API_KEY_HEADER: process.env.OFCOM_API_KEY_HEADER
+  },
   transport: typeof fetch = fetch
 ): Promise<unknown> {
   const request = buildOfcomRequest(postcode, environment);
