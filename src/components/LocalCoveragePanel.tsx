@@ -52,7 +52,14 @@ export default function LocalCoveragePanel(props: Props) {
       </div>
       {failedLookups > 0 && <p className="coverage-message">{failedLookups} nearby queries could not be completed; missing samples are not zero coverage.</p>}
       <p className="coverage-legend">Numbers are shown only where all returned properties in a postcode agree. ≠ means different property scores; tap to choose an address. ? means no comparable score. The pins are at postcode centres, not precise property locations. No results are saved.</p>
-      <a className="local-ofcom-link" href="https://www.ofcom.org.uk/mobile" target="_blank" rel="noopener noreferrer">Coverage predictions © Ofcom · View official checker</a>
+      <div className="ofcom-attribution">
+        <a href="https://www.ofcom.org.uk/mobile" target="_blank" rel="noopener noreferrer">
+          <img src="https://www.ofcom.org.uk/siteassets/resources/images/illustrations/logos/powered-by-ofcom-api.png"
+            width="156" height="42" alt="Powered by Ofcom API" />
+        </a>
+        <a className="local-ofcom-link" href="https://www.ofcom.org.uk/mobile" target="_blank" rel="noopener noreferrer">View official Ofcom checker</a>
+      </div>
+      <p className="coverage-disclaimer">Mobile coverage availability: Ofcom's information uses signal predictions supplied by mobile operators. It brings their estimates together using a shared independent approach; an operator's own checker may show a different result because of different assumptions about devices, service reliability and signal loss indoors or in vehicles. The underlying predictions are modelled, not measured at every property, and can be wrong. Ofcom and the operators update their data periodically, sometimes at different times. Please also check your mobile provider's coverage checker before relying on a prediction.</p>
     </>}
   </section>;
 }

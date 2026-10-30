@@ -85,7 +85,7 @@ export default function SignalApp() {
   }, [centre.lat, centre.lon, zoom, online, tab, refreshToken]);
   const localIsCurrent = Boolean(localCoverage && distanceMetres(centre, localCoverage.centre) < 400);
   const visibleLocal = localIsCurrent ? localCoverage?.samples ?? [] : [];
-  const loadLocalCoverage = async () => {
+  const loadLocalCoverage = async (target: LatLon = centre) => {
     if (!online) { setLocalError("Local estimates need an internet connection."); return; }
     if (localLoading) return;
     setLocalLoading(true);
@@ -93,7 +93,7 @@ export default function SignalApp() {
     setLocalCoverage(null);
     setSelectedLocalPostcode(null);
     try {
-      const params = new URLSearchParams({ lat: centre.lat.toFixed(5), lon: centre.lon.toFixed(5) });
+      const params = new URLSearchParams({ lat: target.lat.toFixed(5), lon: target.lon.toFixed(5) });
       const response = await fetch("/api/local-coverage?" + params, { cache: "no-store" });
       const payload: unknown = await response.json();
       if (!response.ok) throw new Error(payload && typeof payload === "object" && "error" in payload ?
@@ -152,6 +152,7 @@ export default function SignalApp() {
       setGeolocating(false);
       if (!validCoordinates(here)) { setNotice("Signal currently covers the UK only."); return; }
       focusOn(here, "Near your location", 14); setTab("here");
+      void loadLocalCoverage(here);
       // Look up the nearest postcode so a GPS request can show property-level Ofcom coverage.
       void fetch("/api/nearest-postcode?lat=" + encodeURIComponent(String(here.lat)) + "&lon=" + encodeURIComponent(String(here.lon)))
         .then(response => response.ok ? response.json() : null)
@@ -169,6 +170,7 @@ export default function SignalApp() {
       if (!response.ok) throw new Error(data.error || "Postcode unavailable");
       focusOn({ lat: data.lat, lon: data.lon }, data.label, 14);
       setCoveragePostcode(postcode.trim().toUpperCase());
+      void loadLocalCoverage({ lat: data.lat, lon: data.lon });
     } catch (error) { setNotice(error instanceof Error ? error.message : "Postcode unavailable"); }
     finally { setSearching(false); }
   };
@@ -211,14 +213,14 @@ export default function SignalApp() {
             <SignalMap focus={focus} places={visible} selectedId={selected?.id ?? null} showWiFi={showWiFi} onSelect={setSelectedId} onViewChange={handleViewChange} wifiStatus={dataStatus} wifiCount={visible.length} freeCount={freeCount} onShowConnections={() => document.getElementById("wifi-results")?.scrollIntoView({ behavior: "smooth", block: "start" })}
               coverageSamples={visibleLocal} coverageOperator={localOperator}
               selectedCoveragePostcode={selectedLocalPostcode} onSelectCoverage={openLocalPostcode}/>
-            <div className="map-action"><button className="location-button" type="button" onClick={loadLocalCoverage} disabled={localLoading || !online} title="Show Ofcom estimates at nearby sampled postcodes">{localLoading ? "Sampling…" : "Sample mobile coverage"}</button><button className="location-button" onClick={shareLocation} title="Share this map location"><Share2 size={17}/>Share area</button><button className="location-button" onClick={useLocation} disabled={geolocating}><LocateFixed size={18}/>{geolocating ? "Locating…" : "Use my location"}</button></div>
+            <div className="map-action"><button className="location-button" type="button" onClick={() => void loadLocalCoverage()} disabled={localLoading || !online} title="Show Ofcom estimates at nearby sampled postcodes">{localLoading ? "Sampling…" : "Sample mobile coverage"}</button><button className="location-button" onClick={shareLocation} title="Share this map location"><Share2 size={17}/>Share area</button><button className="location-button" onClick={useLocation} disabled={geolocating}><LocateFixed size={18}/>{geolocating ? "Locating…" : "Use my location"}</button></div>
           </div>
           <section className="info-column">
             <div className="section-lead"><span className="eyebrow">{tab === "here" ? "EXPLORE NEARBY" : "PLAN YOUR CONNECTION"}</span><h1>{tab === "here" ? "Stay connected." : "Know before you go."}</h1><p><MapPin size={15}/>{areaLabel}</p></div>
             <LocalCoveragePanel centreMoved={Boolean(localCoverage && !localIsCurrent)}
               samples={visibleLocal} loading={localLoading} error={localError}
               operator={localOperator} onOperatorChange={setLocalOperator}
-              onSample={loadLocalCoverage} onInspect={openLocalPostcode}
+              onSample={() => void loadLocalCoverage()} onInspect={openLocalPostcode}
               disabled={!online} failedLookups={localIsCurrent ? localCoverage?.failedLookups ?? 0 : 0}/>
             <CoveragePanel suggestedPostcode={coveragePostcode}/>
             <div className="data-options"><label className="wifi-toggle"><input type="checkbox" checked={showWiFi} onChange={e => setShowWiFi(e.target.checked)}/><Wifi size={16}/> Show public Wi-Fi pins</label></div>
