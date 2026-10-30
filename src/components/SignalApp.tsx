@@ -1,15 +1,14 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { ArrowRight, BookmarkPlus, Compass, Download, ExternalLink, LocateFixed, MapPin, Search, Share2, ShieldAlert, Wifi, WifiOff } from "lucide-react";
+import { ArrowRight, BookmarkPlus, Compass, Download, ExternalLink, LocateFixed, MapPin, Search, Share2, Wifi, WifiOff } from "lucide-react";
 import SignalMap from "./SignalMap";
 import SavedView from "./SavedView";
 import { DEFAULT_CENTRE, FETCH_RADIUS_METRES, distanceMetres, prettyDistance, snapshotCovers, sortByDistance, validCoordinates } from "@/lib/geo";
-import { getCoverageState } from "@/lib/coverage";
+import CoveragePanel from "./CoveragePanel";
 import { parseSharedMap, sharedMapPath } from "@/lib/shared-map";
 import { listAreas, removeArea, saveArea } from "@/lib/saved-areas";
-import type { LatLon, MobileNetwork, MobileTechnology, SavedArea, WiFiPlace, WiFiResult } from "@/lib/types";
+import type { LatLon, SavedArea, WiFiPlace, WiFiResult } from "@/lib/types";
 type Tab = "here" | "plan" | "saved";
-const NETWORKS: MobileNetwork[] = ["All", "EE", "O2", "Vodafone", "Three"];
 const ACCESS: Record<WiFiPlace["access"], string> = { free: "Tagged free", unknown: "Access unconfirmed", customers: "Customers only", paid: "Paid access" };
 export default function SignalApp() {
   const [tab, setTab] = useState<Tab>("here");
@@ -19,8 +18,7 @@ export default function SignalApp() {
   const [areaLabel, setAreaLabel] = useState("North-east England");
   const [postcode, setPostcode] = useState("");
   const [searching, setSearching] = useState(false);
-  const [network, setNetwork] = useState<MobileNetwork>("All");
-  const [technology, setTechnology] = useState<MobileTechnology>("4G");
+  const [coveragePostcode, setCoveragePostcode] = useState("");
   const [showWiFi, setShowWiFi] = useState(true);
   const [includeRestricted, setIncludeRestricted] = useState(false);
   const [result, setResult] = useState<WiFiResult | null>(null);
@@ -35,7 +33,6 @@ export default function SignalApp() {
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
   const [geolocating, setGeolocating] = useState(false);
-  const coverage = getCoverageState(network, technology);
   const refreshAreas = useCallback(async () => {
     try { setAreas(await listAreas()); } catch { setNotice("Offline storage is unavailable in this browser."); }
   }, []);
@@ -119,6 +116,11 @@ export default function SignalApp() {
       setGeolocating(false);
       if (!validCoordinates(here)) { setNotice("Signal currently covers the UK only."); return; }
       focusOn(here, "Near your location", 14); setTab("here");
+      // Look up the nearest postcode so a GPS request can show property-level Ofcom coverage.
+      void fetch("/api/nearest-postcode?lat=" + encodeURIComponent(String(here.lat)) + "&lon=" + encodeURIComponent(String(here.lon)))
+        .then(response => response.ok ? response.json() : null)
+        .then(data => { if (data?.postcode) setCoveragePostcode(data.postcode); })
+        .catch(() => { /* The coverage panel still has manual postcode search. */ });
     }, () => { setGeolocating(false); setNotice("Location wasn't available. You can move the map or search a postcode."); }, { enableHighAccuracy: false, timeout: 10000 });
   };
   const searchPostcode = async (event: FormEvent<HTMLFormElement>) => {
@@ -130,6 +132,7 @@ export default function SignalApp() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Postcode unavailable");
       focusOn({ lat: data.lat, lon: data.lon }, data.label, 14);
+      setCoveragePostcode(postcode.trim().toUpperCase());
     } catch (error) { setNotice(error instanceof Error ? error.message : "Postcode unavailable"); }
     finally { setSearching(false); }
   };
@@ -174,12 +177,8 @@ export default function SignalApp() {
           </div>
           <section className="info-column">
             <div className="section-lead"><span className="eyebrow">{tab === "here" ? "EXPLORE NEARBY" : "PLAN YOUR CONNECTION"}</span><h1>{tab === "here" ? "Stay connected." : "Know before you go."}</h1><p><MapPin size={15}/>{areaLabel}</p></div>
-            <div className="filter-head"><span className="eyebrow">MOBILE COVERAGE</span><span className="coming-soon">Not connected yet</span></div>
-            <div className="network-pills" aria-label="Select mobile network">
-              {NETWORKS.map(value => <button key={value} aria-pressed={network === value} className={"network-pill" + (network === value ? " current" : "")} onClick={() => setNetwork(value)}>{value === "All" ? "All networks" : value}</button>)}
-            </div>
-            <div className="data-options"><div className="tech-pills"><button className={technology === "4G" ? "chosen" : ""} aria-pressed={technology === "4G"} onClick={() => setTechnology("4G")}>4G</button><button className={technology === "5G" ? "chosen" : ""} aria-pressed={technology === "5G"} onClick={() => setTechnology("5G")}>5G</button></div><label className="wifi-toggle"><input type="checkbox" checked={showWiFi} onChange={e => setShowWiFi(e.target.checked)}/><Wifi size={16}/> Wi-Fi pins</label></div>
-            <div className="coverage-note"><ShieldAlert size={17}/><p><strong>No signal prediction displayed.</strong> {coverage.network} {coverage.technology} coverage needs an authorised Ofcom feed. <a href="https://www.ofcom.org.uk/phones-and-broadband/coverage-and-speeds/ofcom-checker" target="_blank" rel="noopener noreferrer">Check at Ofcom <ExternalLink size={12}/></a></p></div>
+            <CoveragePanel suggestedPostcode={coveragePostcode}/>
+            <div className="data-options"><label className="wifi-toggle"><input type="checkbox" checked={showWiFi} onChange={e => setShowWiFi(e.target.checked)}/><Wifi size={16}/> Show public Wi-Fi pins</label></div>
             <div className="wifi-heading" id="wifi-results"><div><span className="eyebrow">MAPPED WI-FI · WITHIN 5 KM</span><h2>Connections nearby</h2></div><span className="results-count">{loading ? "Looking…" : zoom < 11 ? "Zoom in" : resultIsLocal ? visible.length + " found" : "—"}</span></div>
             <p className="source-explainer">Locations are sourced from OpenStreetMap, not live device scans. Free means tagged free by contributors; availability is not verified.</p><div className="filter-row"><div className="wifi-filters"><label><input type="checkbox" checked={freeOnly} onChange={event => setFreeOnly(event.target.checked)}/> Only tagged free</label><label><input type="checkbox" checked={includeRestricted} onChange={event => setIncludeRestricted(event.target.checked)}/> Include restricted</label></div><span>{resultIsLocal && result ? "OSM data · " + new Date(result.fetchedAt).toLocaleDateString("en-GB") : "OSM · unverified"}</span></div>
             {zoom < 11 ? <p className="list-message">Zoom in or search a postcode to look for Wi-Fi locations within 5 km.</p> : !online ? <p className="list-message">You're offline. Your saved Wi-Fi lists are in <button className="inline-action" onClick={() => setTab("saved")}>Saved</button>.</p> :

@@ -71,3 +71,25 @@
 .map-legend span{display:flex;align-items:center;gap:5px}.legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#197bc1}.legend-dot.free{background:#0c956e}
 .source-explainer{margin:8px 0 5px;color:#6a8290;font-size:11px;line-height:1.5}.wifi-heading{scroll-margin-top:12px}
 @media(max-width:700px){.map-data-count{top:10px;right:10px;padding:8px 10px}.map-data-count strong{font-size:11px}.map-data-count small{font-size:9px}.map-legend{left:10px;bottom:78px;font-size:9px;padding:6px 8px;gap:8px}}
+
+/* Ofcom coverage: property-specific predictions alongside Wi-Fi, mobile first */
+.coverage-widget{border:1px solid #dbe8ed;background:#fbfdfd;border-radius:15px;padding:14px;margin:0 0 13px}
+.coverage-widget .filter-head{margin-bottom:10px}
+.coverage-source{color:#236f85;background:#e7f4fa;font-size:10px;font-weight:800;border-radius:15px;padding:5px 9px}
+.coverage-search{display:flex;gap:7px}.coverage-search input{width:100%;min-width:0;border:1px solid #cbdfe8;border-radius:10px;padding:11px;font-size:13px;background:#fff}
+.coverage-search button{border:0;background:#1269ad;color:#fff;border-radius:10px;padding:10px 13px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;white-space:nowrap}
+.coverage-message,.coverage-error,.coverage-disclaimer,.coverage-legend,.coverage-date{color:#617a85;font-size:11px;line-height:1.6;margin:11px 0}
+.coverage-error{color:#a43736}.coverage-result-heading{font-size:12px;font-weight:800;color:#1b5169;margin:15px 0 11px}
+.coverage-property-label{display:grid;gap:7px;font-size:11px;font-weight:800;color:#526e7a}
+.coverage-property-label select{width:100%;border:1px solid #cbdfe8;border-radius:10px;padding:11px;background:#fff;color:#153341;font-size:12px}
+.coverage-address{font-size:12px;font-weight:750;color:#234f62;line-height:1.5;margin:12px 0}
+.coverage-rows{margin-top:12px;display:grid;gap:6px}
+.coverage-network-row{display:grid;grid-template-columns:72px 30px minmax(0,1fr);align-items:center;gap:9px;padding:9px 8px;border-radius:9px;background:#f1f7f8;font-size:11px;color:#405d6a}
+.coverage-network-row strong{font-size:12px}.coverage-rating{font-size:13px;font-weight:900;border-radius:7px;display:grid;place-items:center;min-height:28px;background:#e2e7e9;color:#4f6875}
+.coverage-rating-0{background:#f9dfe0;color:#9e3239}.coverage-rating-1{background:#ffe8c4;color:#945718}
+.coverage-rating-2{background:#fcf0bb;color:#8a7027}.coverage-rating-3{background:#def0d1;color:#497d38}
+.coverage-rating-4{background:#c7e9d8;color:#21684a}
+.ofcom-attribution{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:17px;flex-wrap:wrap}
+.ofcom-attribution img{max-width:156px;width:auto;height:auto;min-height:26px;object-fit:contain}
+.ofcom-attribution a{color:#1269ad;font-size:11px;font-weight:750;display:flex;align-items:center;gap:5px}
+.coverage-disclaimer{border-top:1px solid #e1ecee;padding-top:10px}
