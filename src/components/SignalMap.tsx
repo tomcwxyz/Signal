@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { googleMapsDirectionsUrl } from "@/lib/directions";
 import type * as Leaflet from "leaflet";
@@ -47,6 +47,10 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, expande
   const viewChanged = useRef(onViewChange);
   const selected = useRef(onSelect);
   const lastFocus = useRef(focus);
+  // Store the actual geographical view independently of Leaflet's pixel-sized
+  // container. Expanding/collapsing must not be treated as a user pan.
+  const geographicView = useRef({ lat: focus.lat, lon: focus.lon, zoom: focus.zoom });
+  const resizingLayout = useRef(false);
   const [attempt, setAttempt] = useState(0);
   const [renderVersion, setRenderVersion] = useState(0);
   const [tileStatus, setTileStatus] = useState<"loading" | "ready" | "failed">("loading");
@@ -71,6 +75,7 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, expande
         maxBounds: [[48, -12], [62.5, 4]]
       }).setView([point.lat, point.lon], point.zoom);
       mapRef.current = instance;
+      geographicView.current = { lat: point.lat, lon: point.lon, zoom: point.zoom };
       const markers = leaflet.layerGroup().addTo(instance);
       markersRef.current = markers;
       coverageMarkersRef.current = leaflet.layerGroup().addTo(instance);
@@ -97,9 +102,13 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, expande
       }, 11000);
 
       instance.on("moveend", () => {
-        if (disposed) return;
+        // invalidateSize() emits moveend. Publishing that as a user's pan can
+        // change Signal's data centre and discard both Wi-Fi and Ofcom markers.
+        if (disposed || resizingLayout.current) return;
         const centre = instance.getCenter();
-        viewChanged.current({ lat: centre.lat, lon: centre.lng }, instance.getZoom());
+        const zoom = instance.getZoom();
+        geographicView.current = { lat: centre.lat, lon: centre.lng, zoom };
+        viewChanged.current({ lat: centre.lat, lon: centre.lng }, zoom);
       });
       // Invalidate once layout and browser chrome settle on mobile browsers.
       requestAnimationFrame(() => { if (!disposed) instance.invalidateSize({ pan: false }); });
@@ -119,17 +128,34 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, expande
     };
   }, [attempt]);
 
-  // Expanding changes the map dimensions without replacing the Leaflet instance.
-  useEffect(() => {
+  // Expand/collapse changes the DOM size, not the chosen geographical centre.
+  // Preserve Leaflet's view through every size invalidation, and suppress its
+  // synthetic moveend. Otherwise the parent's nearby-data guards see a false
+  // location change and temporarily remove every marker.
+  useLayoutEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const frame = requestAnimationFrame(() => map.invalidateSize({ pan: false }));
-    const later = setTimeout(() => map.invalidateSize({ pan: false }), 200);
+    const keepView = () => {
+      if (mapRef.current !== map) return;
+      const { lat, lon, zoom } = geographicView.current;
+      resizingLayout.current = true;
+      try {
+        map.invalidateSize({ pan: false, animate: false });
+        map.setView([lat, lon], zoom, { animate: false, reset: true });
+      } finally {
+        resizingLayout.current = false;
+      }
+    };
+    keepView();
+    const frame = requestAnimationFrame(keepView);
+    // A second pass handles Android browser chrome / dynamic viewport settling.
+    const later = setTimeout(keepView, 180);
     return () => { cancelAnimationFrame(frame); clearTimeout(later); };
   }, [expanded, renderVersion]);
 
   useEffect(() => {
     if (mapRef.current && focus.version > 0) {
+      geographicView.current = { lat: focus.lat, lon: focus.lon, zoom: focus.zoom };
       mapRef.current.setView([focus.lat, focus.lon], focus.zoom, { animate: true });
     }
   }, [focus]);
