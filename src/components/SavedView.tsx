@@ -3,6 +3,7 @@ import { Download, MapPin, Trash2, WifiOff } from "lucide-react";
 import type { SavedArea } from "@/lib/types";
 import { distanceMetres, prettyDistance, sortByDistance } from "@/lib/geo";
 import OfflineDiagram from "./OfflineDiagram";
+import WiFiDirections from "./WiFiDirections";
 import { ageInDays, snapshotNeedsReview } from "@/lib/snapshot";
 type Props = {
   areas: SavedArea[];
@@ -33,7 +34,7 @@ export default function SavedView({ areas, openId, setOpenId, onDelete, online, 
         {open.places.length === 0 ? <p>No Wi-Fi locations were in this saved snapshot.</p> :
         <ol className="saved-places">{sortByDistance(open.places, open.centre).slice(0, 60).map(place => <li key={place.id}>
           <div><strong>{place.name}</strong><small>{place.access === "free" ? "Tagged free" : place.access === "unknown" ? "Cost unconfirmed" : place.access === "customers" ? "Customers only" : "Paid"} · {prettyDistance(distanceMetres(open.centre, place))} from centre</small><small>{place.openingHours ? "Hours: " + place.openingHours : "Opening hours not recorded"}</small><small>{place.lat.toFixed(5)}, {place.lon.toFixed(5)}</small></div>
-          <a href={place.osmUrl} target="_blank" rel="noopener noreferrer" aria-label={"Open " + place.name + " on OpenStreetMap (requires connection)"}>OSM ↗</a>
+          <div className="saved-place-actions">{online && <WiFiDirections place={place} compact/>}<a href={place.osmUrl} target="_blank" rel="noopener noreferrer" aria-label={"Open " + place.name + " on OpenStreetMap (requires connection)"}>OSM ↗</a></div>
         </li>)}</ol>}
       </div>}</div>}
   </section>;

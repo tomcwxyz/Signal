@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, BookmarkPlus, Compass, Download, ExternalLink, LocateFixed, MapPin, Search, Share2, Wifi, WifiOff } from "lucide-react";
 import SignalMap from "./SignalMap";
+import WiFiDirections from "./WiFiDirections";
 import SavedView from "./SavedView";
 import { DEFAULT_CENTRE, FETCH_RADIUS_METRES, distanceMetres, prettyDistance, snapshotCovers, sortByDistance, validCoordinates } from "@/lib/geo";
 import CoveragePanel from "./CoveragePanel";
@@ -15,6 +16,7 @@ type Tab = "here" | "plan" | "saved";
 const ACCESS: Record<WiFiPlace["access"], string> = { free: "Tagged free", unknown: "Access unconfirmed", customers: "Customers only", paid: "Paid access" };
 export default function SignalApp() {
   const [tab, setTab] = useState<Tab>("here");
+  const [mapExpanded, setMapExpanded] = useState(false);
   const [centre, setCentre] = useState<LatLon>(DEFAULT_CENTRE);
   const [zoom, setZoom] = useState(12.5);
   const [focus, setFocus] = useState({ ...DEFAULT_CENTRE, zoom: 12.5, version: 0 });
@@ -45,6 +47,21 @@ export default function SignalApp() {
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
   const [geolocating, setGeolocating] = useState(false);
+  // CSS viewport expansion works within Android in-app browsers that do not
+  // support the browser Fullscreen API. Keep a visible close control.
+  useEffect(() => {
+    if (!mapExpanded) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMapExpanded(false);
+    };
+    window.addEventListener("keydown", escape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", escape);
+    };
+  }, [mapExpanded]);
   const refreshAreas = useCallback(async () => {
     try { setAreas(await listAreas()); } catch { setNotice("Offline storage is unavailable in this browser."); }
   }, []);
@@ -255,8 +272,9 @@ export default function SignalApp() {
       <>
         {tab === "plan" && <form className="plan-bar" onSubmit={searchPostcode}><Search size={18}/><input aria-label="Enter a UK postcode" value={postcode} onChange={event => setPostcode(event.target.value)} placeholder="Plan ahead — enter a UK postcode" autoComplete="postal-code"/><button className="small-primary" type="submit" disabled={searching}>{searching ? "Finding…" : "Find"} <ArrowRight size={15}/></button></form>}
         <div className="explorer">
-          <div className="map-column">
-            <SignalMap focus={focus} places={visible} selectedId={selected?.id ?? null} showWiFi={showWiFi} onSelect={setSelectedId} onViewChange={handleViewChange} wifiStatus={dataStatus} wifiCount={visible.length} freeCount={freeCount} onShowConnections={() => document.getElementById("wifi-results")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          <div className={"map-column" + (mapExpanded ? " is-expanded" : "")}>
+            <SignalMap focus={focus} places={visible} selectedId={selected?.id ?? null} showWiFi={showWiFi}
+              expanded={mapExpanded} onToggleExpanded={() => setMapExpanded(value => !value)} onSelect={setSelectedId} onViewChange={handleViewChange} wifiStatus={dataStatus} wifiCount={visible.length} freeCount={freeCount} onShowConnections={() => document.getElementById("wifi-results")?.scrollIntoView({ behavior: "smooth", block: "start" })}
               coverageSamples={visibleLocal} coverageOperator={localOperator} showHeat={localEnabled && showHeat}
               selectedCoveragePostcode={selectedLocalPostcode} onSelectCoverage={openLocalPostcode}/>
             <div className="map-action"><button className="location-button" type="button" onClick={toggleLocalCoverage} disabled={!online} title="Toggle local estimated coverage shading">{localLoading ? "Checking coverage…" : localEnabled ? "Hide coverage" : "Show coverage"}</button><button className="location-button" onClick={shareLocation} title="Share this map location"><Share2 size={17}/>Share area</button><button className="location-button" onClick={useLocation} disabled={geolocating}><LocateFixed size={18}/>{geolocating ? "Locating…" : "Use my location"}</button></div>
@@ -278,10 +296,13 @@ export default function SignalApp() {
               loading ? <div className="list-message loading-indicator">Looking for mapped Wi-Fi around this area…</div> :
               fetchError ? <p className="list-message error">{fetchError} <button className="inline-action" onClick={retryWiFi}>Try again</button></p> :
               !resultIsLocal ? <p className="list-message">Search this area to see available Wi-Fi records.</p> : visible.length === 0 ? <p className="list-message">No matching Wi-Fi locations were found in OpenStreetMap around here. That doesn't mean none exist. Try a different location or include restricted hotspots.</p> :
-              <div className="places-list">{visible.slice(0, 12).map(place => <button key={place.id} className={"place-row" + (selected?.id === place.id ? " selected" : "")} onClick={() => setSelectedId(place.id)}>
-                <span className="wifi-icon"><Wifi size={19}/></span><span className="place-info"><strong>{place.name}</strong><small>{place.kind} · {prettyDistance(distanceMetres(centre, place))}</small></span><span className={"access-tag " + place.access}>{ACCESS[place.access]}</span>
-              </button>)}{visible.length > 12 && <p className="list-message">Showing 12 nearest of {visible.length} mapped places.</p>}</div>}
-            {selected && showWiFi && zoom >= 11 && online && !fetchError && <div className="place-detail"><span className="eyebrow">SELECTED CONNECTION</span><h3>{selected.name}</h3><div className="detail-access"><span className={"access-tag " + selected.access}>{ACCESS[selected.access]}</span><span>{prettyDistance(distanceMetres(centre, selected))} away</span></div><p>Opening hours: {selected.openingHours ?? "Not recorded"}. Availability and security have not been verified.</p><div className="detail-actions"><a target="_blank" rel="noopener noreferrer" href={selected.osmUrl}>View OSM record <ExternalLink size={14}/></a>{selected.website && <a target="_blank" rel="noopener noreferrer" href={selected.website}>Website <ExternalLink size={14}/></a>}</div></div>}
+              <div className="places-list">{visible.slice(0, 12).map(place => <div key={place.id} className={"place-row" + (selected?.id === place.id ? " selected" : "")}>
+                <button type="button" className="place-select" onClick={() => setSelectedId(place.id)} aria-label={"View details for " + place.name}>
+                  <span className="wifi-icon"><Wifi size={19}/></span><span className="place-info"><strong>{place.name}</strong><small>{place.kind} · {prettyDistance(distanceMetres(centre, place))}</small></span><span className={"access-tag " + place.access}>{ACCESS[place.access]}</span>
+                </button>
+                <WiFiDirections place={place} compact/>
+              </div>)}{visible.length > 12 && <p className="list-message">Showing 12 nearest of {visible.length} mapped places.</p>}</div>}
+            {selected && showWiFi && zoom >= 11 && online && !fetchError && <div className="place-detail"><span className="eyebrow">SELECTED CONNECTION</span><h3>{selected.name}</h3><div className="detail-access"><span className={"access-tag " + selected.access}>{ACCESS[selected.access]}</span><span>{prettyDistance(distanceMetres(centre, selected))} away</span></div><p>Opening hours: {selected.openingHours ?? "Not recorded"}. Availability and security have not been verified.</p><div className="detail-actions"><WiFiDirections place={selected}/><a target="_blank" rel="noopener noreferrer" href={selected.osmUrl}>View OSM record <ExternalLink size={14}/></a>{selected.website && <a target="_blank" rel="noopener noreferrer" href={selected.website}>Website <ExternalLink size={14}/></a>}</div></div>}
             <label className="save-area-label" htmlFor="saved-area-name">Name this saved area</label><input id="saved-area-name" className="save-name-input" maxLength={80} value={areaLabel} onChange={event => setAreaLabel(event.target.value)}/>
             <button className="save-button" onClick={storeArea} disabled={saving || !online || !resultIsLocal || loading || zoom < 11}><BookmarkPlus size={19}/>{saving ? "Saving…" : "Save Wi-Fi list for offline use"}</button>
             <p className="save-explainer">Stored in this browser. Clearing site data removes saved places. No street tiles or mobile coverage are downloaded.</p>

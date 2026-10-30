@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Maximize2, Minimize2 } from "lucide-react";
+import { googleMapsDirectionsUrl } from "@/lib/directions";
 import type * as Leaflet from "leaflet";
 import type { LatLon, WiFiPlace } from "@/lib/types";
 import type { LocalCoverageSample } from "@/lib/local-coverage";
@@ -14,6 +16,8 @@ type Props = {
   places: WiFiPlace[];
   selectedId: string | null;
   showWiFi: boolean;
+  expanded: boolean;
+  onToggleExpanded: () => void;
   onSelect: (id: string) => void;
   onViewChange: (centre: LatLon, zoom: number) => void;
   wifiStatus: "ready" | "loading" | "error" | "offline" | "zoom";
@@ -32,10 +36,11 @@ const MAP_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright
 const MARKER_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 9a15 15 0 0 1 18 0M6.5 12.5a10 10 0 0 1 11 0M10 16a4 4 0 0 1 4 0"/><circle cx="12" cy="19.5" r="1.4" fill="currentColor" stroke="none"/></svg>';
 
 /** A deliberately lightweight raster map. No MapLibre/WebGL dependency. */
-export default function SignalMap({ focus, places, selectedId, showWiFi, onSelect, onViewChange, wifiStatus, wifiCount, freeCount, onShowConnections, coverageSamples, coverageOperator, showHeat, selectedCoveragePostcode, onSelectCoverage }: Props) {
+export default function SignalMap({ focus, places, selectedId, showWiFi, expanded, onToggleExpanded, onSelect, onViewChange, wifiStatus, wifiCount, freeCount, onShowConnections, coverageSamples, coverageOperator, showHeat, selectedCoveragePostcode, onSelectCoverage }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Leaflet.Map | null>(null);
   const markersRef = useRef<Leaflet.LayerGroup | null>(null);
+  const wifiMarkerElements = useRef<Map<string, Leaflet.Marker>>(new Map());
   const coverageMarkersRef = useRef<Leaflet.LayerGroup | null>(null);
   const selectCoverageRef = useRef(onSelectCoverage);
   const leafletRef = useRef<typeof Leaflet | null>(null);
@@ -105,6 +110,7 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, onSelec
       disposed = true;
       if (timer) clearTimeout(timer);
       markersRef.current = null;
+      wifiMarkerElements.current.clear();
       coverageMarkersRef.current = null;
       const oldMap = mapRef.current;
       mapRef.current = null;
@@ -113,38 +119,70 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, onSelec
     };
   }, [attempt]);
 
+  // Expanding changes the map dimensions without replacing the Leaflet instance.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const frame = requestAnimationFrame(() => map.invalidateSize({ pan: false }));
+    const later = setTimeout(() => map.invalidateSize({ pan: false }), 200);
+    return () => { cancelAnimationFrame(frame); clearTimeout(later); };
+  }, [expanded, renderVersion]);
+
   useEffect(() => {
     if (mapRef.current && focus.version > 0) {
       mapRef.current.setView([focus.lat, focus.lon], focus.zoom, { animate: true });
     }
   }, [focus]);
 
+  // Keep markers mounted while selecting one: rebuilding would close its popup.
   useEffect(() => {
     const leaflet = leafletRef.current;
     const markers = markersRef.current;
     if (!leaflet || !markers) return;
     markers.clearLayers();
+    wifiMarkerElements.current.clear();
     if (!showWiFi) return;
     for (const place of places.slice(0, 300)) {
       const classes = [
         "signal-leaflet-marker",
-        place.id === selectedId ? "selected" : "",
         place.access === "free" ? "free" : "",
         place.access === "customers" || place.access === "paid" ? "restricted" : ""
       ].filter(Boolean).join(" ");
       const icon = leaflet.divIcon({
         className: classes,
         html: '<span class="signal-marker-inner">' + MARKER_SVG + '</span>',
-        iconSize: [37, 37],
-        iconAnchor: [18, 37],
+        iconSize: [37, 37], iconAnchor: [18, 37]
       });
       const marker = leaflet.marker([place.lat, place.lon], {
         icon, title: place.name, keyboard: true, alt: place.name
       });
+      // OSM text is inserted safely; no untrusted HTML is interpolated.
+      const popup = document.createElement("div");
+      popup.className = "signal-wifi-popup";
+      const name = document.createElement("strong");
+      name.textContent = place.name;
+      const detail = document.createElement("small");
+      detail.textContent = place.kind + " · " +
+        (place.access === "free" ? "Tagged free" : place.access === "unknown" ? "Access unconfirmed" :
+          place.access === "customers" ? "Customers only" : "Paid access");
+      const link = document.createElement("a");
+      link.textContent = "Walking directions in Google Maps ↗";
+      link.href = googleMapsDirectionsUrl(place, "walking");
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      popup.append(name, detail, link);
+      marker.bindPopup(popup, { maxWidth: 260, minWidth: 195, autoPan: true, closeButton: true });
       marker.on("click", () => selected.current(place.id));
       marker.addTo(markers);
+      wifiMarkerElements.current.set(place.id, marker);
     }
-  }, [places, selectedId, showWiFi, renderVersion]);
+  }, [places, showWiFi, renderVersion]);
+
+  useEffect(() => {
+    for (const [id, marker] of wifiMarkerElements.current) {
+      marker.getElement()?.classList.toggle("selected", id === selectedId);
+    }
+  }, [selectedId, places, showWiFi, renderVersion]);
 
   useEffect(() => {
     const leaflet = leafletRef.current;
@@ -173,6 +211,12 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, onSelec
   const osmLink = "https://www.openstreetmap.org/#map/" + Math.round(focus.zoom) + "/" + focus.lat.toFixed(5) + "/" + focus.lon.toFixed(5);
   return <div className="map-panel">
     <div ref={container} className="map-canvas" aria-label="Interactive map of mobile coverage estimates and Wi-Fi locations" role="region" />
+    <button type="button" className="map-expand-toggle" aria-pressed={expanded}
+      aria-label={expanded ? "Close expanded map" : "Expand map to fill the screen"}
+      title={expanded ? "Close map" : "Expand map"} onClick={onToggleExpanded}>
+      {expanded ? <Minimize2 size={18} aria-hidden="true"/> : <Maximize2 size={18} aria-hidden="true"/>}
+      <span>{expanded ? "Close map" : "Expand map"}</span>
+    </button>
     <CoverageHeatLayer map={mapRef.current} leaflet={leafletRef.current} samples={coverageSamples}
       view={coverageOperator} visible={showHeat && renderVersion > 0}/>
     {tileStatus === "loading" && <div className="map-loading" role="status">Loading street map…</div>}
