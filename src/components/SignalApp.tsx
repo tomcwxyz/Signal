@@ -122,7 +122,12 @@ export default function SignalApp() {
   }, [online]);
   const enableLocalCoverage = (target: LatLon = centre) => {
     setLocalEnabled(true);
-    void requestLocalCoverage(target);
+    // Switching back on, using GPS, or searching must not circumvent the
+    // same request budget used for pan-triggered queries.
+    if (Date.now() - lastLocalRequestAt.current >= 21500) {
+      void requestLocalCoverage(target);
+    }
+    // Otherwise the map-follow effect schedules the new centre automatically.
   };
   const toggleLocalCoverage = () => {
     if (localEnabled) {
