@@ -127,3 +127,14 @@
 .local-heat-switch input{accent-color:#176ab1}
 .local-refresh-link{display:block;margin-top:9px;padding:6px 0;border:0;background:transparent;color:#145c8b;text-decoration:underline;font-size:11px;font-weight:700}
 .coverage-map-score{font-size:13px}
+
+/* Always keep Leaflet's raster tiles below this native SVG coverage overlay.
+   Leaflet's overlayPane (z400) is beneath markerPane (z600): Wi-Fi and
+   postcode markers remain clickable and legible. */
+.signal-ofcom-heat-ring{pointer-events:none;mix-blend-mode:multiply}
+.coverage-map-overlay{top:69px;bottom:auto;left:12px;max-width:236px;padding:8px 10px;gap:3px}
+.coverage-map-overlay span{line-height:1.35}
+@media(max-width:700px){
+  .coverage-map-overlay{top:66px;left:10px;max-width:218px;padding:7px 9px;font-size:9px}
+  .map-legend{left:10px;bottom:79px}
+}
