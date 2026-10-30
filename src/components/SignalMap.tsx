@@ -141,7 +141,7 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, expande
       resizingLayout.current = true;
       try {
         map.invalidateSize({ pan: false, animate: false });
-        map.setView([lat, lon], zoom, { animate: false, reset: true });
+        map.setView([lat, lon], zoom, { animate: false });
       } finally {
         resizingLayout.current = false;
       }
