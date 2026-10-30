@@ -93,3 +93,28 @@
 .ofcom-attribution img{max-width:156px;width:auto;height:auto;min-height:26px;object-fit:contain}
 .ofcom-attribution a{color:#1269ad;font-size:11px;font-weight:750;display:flex;align-items:center;gap:5px}
 .coverage-disclaimer{border-top:1px solid #e1ecee;padding-top:10px}
+
+/* Local on-demand Ofcom postcode sample layer – never a filled heatmap. */
+.local-coverage-panel{border:1px solid #dbe8ed;border-radius:15px;padding:14px;margin:0 0 14px;background:#f7fbfd}
+.local-coverage-panel .coverage-message{margin:9px 0 12px}
+.local-sample-button{width:100%;background:#165f92;color:#fff;border:0;border-radius:10px;padding:11px 12px;font-size:12px;font-weight:800;margin-top:12px}
+.local-coverage-list{max-height:240px;overflow:auto;border:1px solid #e3edf0;border-radius:10px;background:white}
+.local-coverage-item{display:grid;width:100%;grid-template-columns:76px 32px minmax(0,1fr);gap:9px;align-items:center;border:0;border-bottom:1px solid #edf1f3;background:transparent;text-align:left;padding:9px;color:#214858;font-size:12px}
+.local-coverage-item:hover{background:#edf8fa}
+.local-coverage-item small{line-height:1.35;color:#607986;font-size:10px}
+.local-coverage-item .coverage-rating{min-height:28px}
+.local-ofcom-link{display:block;margin-top:9px;font-size:10px;font-weight:700;color:#1e6989;text-decoration:underline}
+.signal-coverage-marker{background:none;border:0}
+.coverage-map-score{display:grid;place-items:center;width:40px;height:40px;border:3px solid white;box-shadow:0 3px 12px #193c4f70;border-radius:100%;font-size:15px;font-weight:900;background:#e5edf0;color:#274c5f}
+.coverage-map-score.score-0{background:#ce4251;color:white}
+.coverage-map-score.score-1{background:#f3a451;color:#49340a}
+.coverage-map-score.score-2{background:#f1ce63;color:#49340a}
+.coverage-map-score.score-3{background:#b4d69b;color:#193d25}
+.coverage-map-score.score-4{background:#3da579;color:white}
+.coverage-map-score.score-missing,.coverage-map-score.is-varied{background:#e5edf0;color:#294a60;border:3px dashed white}
+.signal-coverage-marker.selected .coverage-map-score{outline:3px solid #2c718d;outline-offset:2px}
+.coverage-map-overlay{position:absolute;z-index:402;left:12px;bottom:126px;background:#fffffff0;border:1px solid #dbe8ec;box-shadow:0 4px 20px #1a48521c;padding:9px 12px;border-radius:11px;display:grid;gap:4px;color:#4e6d7a;font-size:10px;max-width:min(260px,80%)}
+.coverage-map-overlay strong{color:#17485a;font-size:11px}
+.map-action{display:flex;gap:7px;flex-wrap:wrap;right:10px}
+.map-action .location-button{padding:10px 12px}
+@media(max-width:700px){.coverage-map-overlay{bottom:115px;left:10px;font-size:9px}.map-action{bottom:12px;max-width:calc(100% - 20px)}.map-action .location-button{padding:9px 10px;font-size:10px}}
