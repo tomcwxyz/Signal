@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import type * as Leaflet from "leaflet";
 import type { LatLon, WiFiPlace } from "@/lib/types";
 import type { LocalCoverageSample } from "@/lib/local-coverage";
-import type { CoverageOperator } from "@/lib/ofcom-coverage";
+import type { CoverageView } from "@/lib/coverage-visual";
+import { sampleVisual } from "@/lib/coverage-visual";
+import CoverageHeatCanvas from "./CoverageHeatCanvas";
 
 type Focus = LatLon & { zoom: number; version: number };
 type Props = {
@@ -19,7 +21,8 @@ type Props = {
   freeCount: number;
   onShowConnections: () => void;
   coverageSamples: LocalCoverageSample[];
-  coverageOperator: CoverageOperator;
+  coverageOperator: CoverageView;
+  showHeat: boolean;
   selectedCoveragePostcode: string | null;
   onSelectCoverage: (postcode: string) => void;
 };
@@ -29,7 +32,7 @@ const MAP_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright
 const MARKER_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 9a15 15 0 0 1 18 0M6.5 12.5a10 10 0 0 1 11 0M10 16a4 4 0 0 1 4 0"/><circle cx="12" cy="19.5" r="1.4" fill="currentColor" stroke="none"/></svg>';
 
 /** A deliberately lightweight raster map. No MapLibre/WebGL dependency. */
-export default function SignalMap({ focus, places, selectedId, showWiFi, onSelect, onViewChange, wifiStatus, wifiCount, freeCount, onShowConnections, coverageSamples, coverageOperator, selectedCoveragePostcode, onSelectCoverage }: Props) {
+export default function SignalMap({ focus, places, selectedId, showWiFi, onSelect, onViewChange, wifiStatus, wifiCount, freeCount, onShowConnections, coverageSamples, coverageOperator, showHeat, selectedCoveragePostcode, onSelectCoverage }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Leaflet.Map | null>(null);
   const markersRef = useRef<Leaflet.LayerGroup | null>(null);
@@ -149,27 +152,28 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, onSelec
     if (!leaflet || !group) return;
     group.clearLayers();
     for (const point of coverageSamples) {
-      const value = point.ratings[coverageOperator];
-      const varies = point.varies[coverageOperator];
-      const label = varies ? "Varies" : value === null ? "Not reported" : String(value);
+      const visual = sampleVisual(point, coverageOperator);
+      const value = visual.level;
+      const label = visual.label;
       const chosen = selectedCoveragePostcode === point.postcode;
       // All dynamic map markup is an integer, ?, or a static symbol.
       const icon = leaflet.divIcon({
         className: "signal-coverage-marker" + (chosen ? " selected" : ""),
         html: '<span class="coverage-map-score score-' + (value === null ? "missing" : value) +
-          (varies ? ' is-varied' : '') + '">' + (varies ? "≠" : value === null ? "?" : value) + "</span>",
+          (value === null ? ' is-varied' : '') + '">' + label + "</span>",
         iconSize: [40, 40], iconAnchor: [20, 20]
       });
       leaflet.marker([point.centre.lat, point.centre.lon], {
-        icon, title: point.postcode + " · " + label + " · postcode centre, not an address",
-        keyboard: true, alt: point.postcode + " " + label
+        icon, title: point.postcode + " · " + visual.details + " · postcode centre",
+        keyboard: true, alt: point.postcode + " " + visual.details
       }).on("click", () => selectCoverageRef.current(point.postcode)).addTo(group);
     }
   }, [coverageSamples, coverageOperator, selectedCoveragePostcode, renderVersion]);
 
   const osmLink = "https://www.openstreetmap.org/#map/" + Math.round(focus.zoom) + "/" + focus.lat.toFixed(5) + "/" + focus.lon.toFixed(5);
   return <div className="map-panel">
-    <div ref={container} className="map-canvas" aria-label="Interactive map of nearby Wi-Fi hotspots" role="region" />
+    <div ref={container} className="map-canvas" aria-label="Interactive map of mobile coverage estimates and Wi-Fi locations" role="region" />
+    <CoverageHeatCanvas map={mapRef.current} samples={coverageSamples} view={coverageOperator} visible={showHeat && renderVersion > 0}/>
     {tileStatus === "loading" && <div className="map-loading" role="status">Loading street map…</div>}
     {tileStatus === "failed" && <div className="map-error" role="alert">
       <strong>The street map couldn't load</strong>
@@ -184,9 +188,9 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, onSelec
     </div>
     {coverageSamples.length > 0 && <div className="coverage-map-overlay" aria-label="Ofcom coverage samples">
       <strong>{coverageSamples.length} sampled postcodes · {coverageOperator}</strong>
-      <span>0–4: same score at every returned property</span>
-      <span>≠: varies by property · ?: not reported</span>
-      <span>Dots are postcode centres, not coverage areas</span>
+      <span>{coverageOperator === "All" ? "Number of networks with in-home signal (3–4)" : "0–4: identical score at every property"}</span>
+      <span>+ means at least · ≠ varies · ? unknown</span>
+      <span>Soft shading is illustrative, not an Ofcom coverage raster</span>
     </div>}
     <button type="button" className="map-data-count" onClick={onShowConnections} aria-label="View Wi-Fi results">
       {wifiStatus === "ready" ? <><strong>{wifiCount} Wi-Fi places</strong><small>{freeCount} tagged free · View list ↓</small></> :
