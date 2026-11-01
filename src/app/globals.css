@@ -178,7 +178,7 @@
   --signal-accent:#2d6259;
   --signal-accent-soft:#eaf1ed;
   --signal-surface:#fff;
-  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-family:var(--font-signal-interface),"Segoe UI",Arial,sans-serif;
   color:var(--signal-ink);
   background:#f6f7f5;
 }
@@ -369,4 +369,32 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,su
   .brand small{display:none}
   .map-data-count{max-width:135px}
   .map-action .location-button{padding:8px;font-size:10px}
+}
+
+
+/* Typography — IBM Plex Sans for interface copy, Plex Mono only for measurements. */
+.brand strong {
+  font-family:var(--font-signal-interface),"Segoe UI",sans-serif;
+  font-weight:700;
+  letter-spacing:-.85px;
+}
+.section-lead h1,.saved-heading h1,.wifi-heading h2,
+.filter-head h2,.place-detail h3,.saved-detail h2{
+  font-family:var(--font-signal-interface),"Segoe UI",sans-serif;
+  font-weight:600;
+  letter-spacing:-.35px;
+}
+.place-info strong,.local-coverage-item strong,
+.coverage-network-row strong {font-weight:600}
+.coverage-map-score,.coverage-rating,.saved-count,
+.local-coverage-item strong{
+  font-family:var(--font-signal-data),"SFMono-Regular",Consolas,monospace;
+  font-variant-numeric:tabular-nums;
+}
+.coverage-map-score {font-weight:600;letter-spacing:-.5px}
+.coverage-rating{font-weight:600}
+.map-data-count strong{font-weight:600}
+.coverage-result-heading,.coverage-date,.map-data-count small{font-variant-numeric:tabular-nums}
+@media (max-width:700px) {
+  .brand strong {letter-spacing:-.7px}
 }
