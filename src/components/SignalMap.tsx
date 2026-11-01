@@ -254,14 +254,11 @@ export default function SignalMap({ focus, places, selectedId, showWiFi, expande
         <a target="_blank" rel="noopener noreferrer" href={osmLink}>Open in OpenStreetMap ↗</a>
       </div>
     </div>}
-    <div className="map-overlay"><span className="live-dot" /> OpenStreetMap
-      <span className="overlay-extra">{coverageSamples.length ? " · Ofcom postcode samples" : " · Wi-Fi"}</span>
-    </div>
     <button type="button" className="map-data-count" onClick={onShowConnections} aria-label="View Wi-Fi results">
-      {wifiStatus === "ready" ? <><strong>{wifiCount} Wi-Fi places</strong><small>{freeCount} tagged free · View list ↓</small></> :
-       wifiStatus === "loading" ? <><strong>Finding Wi-Fi…</strong><small>Checking OpenStreetMap records</small></> :
-       wifiStatus === "error" ? <><strong>Wi-Fi feed unavailable</strong><small>See error and retry below ↓</small></> :
-       wifiStatus === "offline" ? <><strong>Offline</strong><small>Open Saved for saved locations</small></> :
+      {wifiStatus === "ready" ? <><strong>{wifiCount} Wi-Fi places</strong><small>{freeCount} tagged free · View list</small></> :
+       wifiStatus === "loading" ? <><strong>Finding Wi-Fi…</strong><small>Checking mapped places</small></> :
+       wifiStatus === "error" ? <><strong>Wi-Fi unavailable</strong><small>See details below</small></> :
+       wifiStatus === "offline" ? <><strong>Offline</strong><small>Use saved locations</small></> :
        <><strong>Zoom in for Wi-Fi</strong><small>See mapped places nearby</small></>}
     </button>
     {showWiFi && wifiStatus === "ready" && wifiCount > 0 && <div className="map-legend" aria-label="Wi-Fi marker legend">

@@ -167,3 +167,234 @@
   .place-row .wifi-directions-link{margin-left:auto}
   .wifi-direction-modes a{padding:9px}
 }
+
+
+/* Signal interface refresh: quiet, practical cartographic UI.
+   Keep data colours meaningful; let the map do the visual work. */
+:root {
+  --signal-ink:#243438;
+  --signal-muted:#627477;
+  --signal-line:#dbe2df;
+  --signal-accent:#2d6259;
+  --signal-accent-soft:#eaf1ed;
+  --signal-surface:#fff;
+  font-family:var(--font-signal-interface),"Segoe UI",Arial,sans-serif;
+  color:var(--signal-ink);
+  background:#f6f7f5;
+}
+body {background:#f6f7f5}
+button,input,select{font-family:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{
+  outline:2px solid #2d6259;outline-offset:3px;
+}
+.app-frame {max-width:none;background:var(--signal-surface);box-shadow:none}
+.site-header {height:68px;padding:12px clamp(16px,2.5vw,32px);border-bottom:1px solid var(--signal-line)}
+.brand {gap:11px}
+.brand strong {font-size:25px;letter-spacing:-1.2px;font-weight:740;color:#233e3a}
+.brand-point {color:#41796e}
+.brand small{font-size:11px;color:var(--signal-muted);letter-spacing:0}
+.brand-mark {height:24px;width:23px;gap:3px}
+.brand-mark span {width:4px;background:#356b60;border-radius:2px}
+.brand-mark span:nth-child(1){height:7px}
+.brand-mark span:nth-child(2){height:12px}
+.brand-mark span:nth-child(3){height:18px}
+.brand-mark span:nth-child(4){height:24px}
+.connection-status,.connection-status.is-offline{
+  background:transparent;border:0;border-radius:0;padding:5px 0;
+  color:#536b64;font-size:11px;font-weight:600;
+}
+.connection-status.is-offline{color:#9b622c}
+.tabs {max-width:370px;gap:0;padding:0;margin:0 0 0 18px;border-radius:0;background:transparent}
+.tab {border:0;border-bottom:2px solid transparent;border-radius:0;padding:12px 14px 11px;min-height:47px;color:#687877;font-size:13px;font-weight:580}
+.tab.active{color:#24594f;background:transparent;border-bottom-color:#2d6259;box-shadow:none}
+.tab:hover:not(.active){color:#243e39;background:#f7f9f7}
+.saved-count {font-weight:600;color:#355d53;background:#eaf0ed;border-radius:4px}
+.plan-bar {background:#f7f9f7;border-color:var(--signal-line);padding:10px 18px}
+.plan-bar input,.coverage-search input,.coverage-property-label select,.save-name-input{
+  border:1px solid #cfdad5;box-shadow:none;border-radius:6px;
+  background:#fff;color:var(--signal-ink);font-size:13px;
+}
+.small-primary,.coverage-search button{
+  background:var(--signal-accent);color:white;border-radius:6px;
+  font-size:12px;font-weight:650;
+}
+.explorer {grid-template-columns:minmax(0,1fr) minmax(350px,394px);min-height:calc(100dvh - 115px)}
+.map-column {background:#edf0ec}
+.map-panel{height:min(900px,calc(100dvh - 118px));background:#e7ece7}
+.info-column {padding:24px 25px 36px;border-left:1px solid var(--signal-line)}
+.section-lead {padding-bottom:16px;border-bottom:1px solid var(--signal-line);margin-bottom:19px}
+.section-lead h1{font-weight:670;font-size:23px;line-height:1.25;letter-spacing:-.65px;margin:0 0 8px;color:#233b37}
+.section-lead p{font-size:12px;color:#60736f;margin:0;gap:5px}
+.eyebrow,.detail-label {font-size:11px;letter-spacing:0;font-weight:650;color:#546f69;text-transform:none}
+.filter-head {margin-bottom:12px;align-items:baseline}
+.filter-head h2 {font-size:16px;letter-spacing:-.25px;font-weight:680;color:#24413a;margin:0}
+.coverage-source {background:transparent;border:0;color:#72817f;padding:0;font-size:11px;font-weight:500;border-radius:0;white-space:nowrap}
+.local-coverage-panel,.coverage-widget{
+  border:0;border-bottom:1px solid var(--signal-line);background:transparent;
+  border-radius:0;padding:0 0 21px;margin:0 0 21px;
+}
+.local-coverage-panel .coverage-message {margin:7px 0 12px}
+.coverage-message,.coverage-legend,.coverage-date,.coverage-disclaimer {font-size:12px;line-height:1.55;color:#62726f}
+.network-pills{gap:5px;padding:0 0 3px;scrollbar-width:thin}
+.network-pill {
+  border:1px solid #d5dfda;border-radius:5px;background:#fff;
+  padding:8px 10px;color:#526760;font-size:11px;font-weight:600;
+}
+.network-pill.current{background:#2d6259;border-color:#2d6259;color:#fff;box-shadow:none}
+.local-cover-controls {gap:12px;margin-top:10px}
+.local-cover-controls .local-sample-button {
+  width:auto;min-width:0;flex:0 1 auto;
+  padding:10px 15px;border-radius:6px;font-size:12px;font-weight:650;
+  background:#2d6259;
+}
+.local-heat-switch{font-size:12px;font-weight:500;color:#596b67}
+.local-heat-switch input,.wifi-toggle input,.filter-row input{accent-color:#2d6259}
+.local-refresh-link{color:#285e53;font-size:12px;font-weight:600;text-decoration:none;margin-top:13px}
+.local-refresh-link:hover{text-decoration:underline}
+.coverage-search{gap:6px}
+.coverage-search input {padding:10px 11px}
+.coverage-search button{padding:9px 12px}
+.coverage-result-heading,.coverage-address{font-size:12px;color:#324b43;font-weight:650}
+.coverage-network-row{background:#f5f8f5;border:1px solid #edf1ee;border-radius:5px;font-size:12px}
+.coverage-rating{border-radius:5px;font-weight:720}
+.coverage-property-label{font-size:12px;font-weight:600;color:#526760}
+.coverage-notes,.coverage-samples-details {margin:12px 0 0}
+.coverage-notes summary,.coverage-samples-details summary{
+  cursor:pointer;color:#38685f;font-weight:610;font-size:12px;
+  line-height:1.45;padding:6px 0;
+}
+.coverage-notes[open] summary,.coverage-samples-details[open] summary{margin-bottom:8px}
+.coverage-samples-details summary span{float:right;color:#73817c;font-weight:450}
+.coverage-samples-details[open] summary span{display:none}
+.local-coverage-list{max-height:205px;border:1px solid #dde6e1;border-radius:6px}
+.local-coverage-item{color:#2d4640;padding:9px}
+.local-coverage-item:hover{background:#f4f7f4}
+.local-coverage-item small{font-size:11px}
+.ofcom-attribution {margin-top:14px;gap:8px}
+.ofcom-attribution a,.local-ofcom-link{font-size:11px;font-weight:550;color:#37695e}
+.coverage-disclaimer{margin-top:6px;padding-top:0;border:0}
+.data-options{margin-top:0;padding-top:0}
+.wifi-toggle {color:#526962;font-size:12px;font-weight:580}
+.wifi-heading{margin-top:23px;align-items:center;scroll-margin-top:14px}
+.wifi-heading h2{font-size:17px;letter-spacing:-.35px;font-weight:680;margin:0 0 5px;color:#244039}
+.wifi-range{display:block;font-size:11px;color:#758481}
+.results-count{font-size:11px;color:#42675d;background:#edf3ee;border:0;border-radius:4px;padding:6px 8px;font-weight:600}
+.source-explainer{margin:13px 0 6px;font-size:11px;color:#71817d;line-height:1.55}
+.filter-row{font-size:11px;color:#758480;gap:10px;border-color:var(--signal-line);padding:10px 0 12px}
+.filter-row label{gap:6px}
+.places-list{max-height:360px}
+.place-row{border-bottom:1px solid #e9eeea;padding:11px 2px;gap:7px}
+.place-row:hover,.place-row.selected{background:#f5f8f5}
+.wifi-icon{width:31px;height:31px;border-radius:6px;background:#e9f1f0;color:#326b68}
+.place-info{gap:3px}
+.place-info strong{font-size:12px;font-weight:630}
+.place-info small{font-size:11px;color:#73817d}
+.access-tag,.access-tag.free,.access-tag.paid,.access-tag.customers{
+  font-size:10px;font-weight:600;padding:4px 6px;border-radius:4px;
+}
+.access-tag.free{background:#e4f2e9;color:#32634d}
+.access-tag.paid,.access-tag.customers{background:#f0f2f0;color:#697973}
+.place-detail {background:#f7f9f6;border:1px solid var(--signal-line);border-radius:7px;padding:13px;margin:15px 0}
+.place-detail h3{font-size:16px;font-weight:670;margin:7px 0 11px}
+.place-detail p,.detail-access{font-size:12px;color:#61736d}
+.detail-actions a{color:#2e655b;font-weight:600;font-size:12px}
+.wifi-directions-link,.wifi-direction-modes a,.go-to-map{
+  border:1px solid #d4e1da;background:#fff;color:#2b6256;
+  border-radius:5px;font-weight:600;font-size:11px;
+}
+.save-area-label{font-size:12px;font-weight:600;color:#536c62}
+.save-name-input{border-radius:6px}
+.save-button,.primary-button{background:#2d6259;color:#fff;border-radius:6px;font-weight:650;font-size:12px;box-shadow:none}
+.save-explainer{font-size:11px;text-align:left;color:#7a8984}
+.notice {background:#f1f6f1;border-color:#dce6dd;color:#365b4c;font-size:12px}
+.footer {background:#f7f8f6;border-color:var(--signal-line);color:#71817b;font-size:11px}
+.map-data-count {
+  border:1px solid #dce5df;border-radius:6px;padding:9px 11px;
+  color:#2d4942;background:#fffffff2;box-shadow:0 2px 10px #273f3020;
+}
+.map-data-count strong{font-size:12px;font-weight:660}
+.map-data-count small{font-size:10px;color:#71827a}
+.map-legend{border-color:#dce5df;border-radius:5px;box-shadow:0 2px 8px #273f3019;color:#52665e}
+.map-action{gap:6px}
+.map-action .location-button{
+  border:1px solid #d4dfd8;border-radius:6px;background:#fffffff5;
+  color:#2b554c;box-shadow:0 2px 10px #293e3324;
+  padding:10px 12px;min-height:41px;font-size:11px;font-weight:640;
+}
+.map-action .location-button[aria-pressed="true"]{background:#2d6259;color:#fff;border-color:#2d6259}
+.signal-leaflet-marker .signal-marker-inner{border-radius:50%;box-shadow:0 2px 9px #183e3c61}
+.signal-leaflet-marker.selected .signal-marker-inner{outline:2px solid #2a645b}
+.signal-leaflet-marker.free .signal-marker-inner{background:#2f8768}
+.signal-wifi-popup a {background:#2d6259;border-radius:5px;font-weight:600}
+.signal-coverage-marker.selected .coverage-map-score{outline-color:#2d6259}
+.map-expand-toggle{border-radius:6px!important;font-size:11px!important;font-weight:650!important;box-shadow:0 2px 10px #293e3324!important}
+.saved-view{max-width:1020px}
+.saved-heading h1{font-size:27px;font-weight:680;letter-spacing:-.6px}
+.truth-note,.saved-empty,.saved-detail,.area-card{border-radius:7px}
+.area-card.active{background:#f0f5f1;border-color:#82a99c}
+.area-card strong,.saved-detail h2{color:#274239}
+@media(max-width:900px){
+  .explorer{grid-template-columns:minmax(0,1fr) minmax(325px,355px)}
+  .info-column{padding:21px 18px 30px}
+}
+@media(max-width:700px){
+  .site-header{height:64px;padding:10px 16px}
+  .brand{gap:9px}
+  .brand strong{font-size:24px}
+  .brand small{font-size:10px}
+  .connection-status{font-size:10px;gap:5px}
+  .tabs{max-width:none;margin:0;border-bottom:1px solid var(--signal-line)}
+  .tab{font-size:12px;padding:10px;min-height:44px}
+  .explorer{display:flex;flex-direction:column;min-height:0}
+  .map-column{height:50dvh;min-height:330px;max-height:580px;flex:none}
+  .map-panel{position:relative;height:100%;min-height:0;max-height:none}
+  .info-column{border:0;padding:21px 17px 34px}
+  .section-lead h1{font-size:21px}
+  .section-lead{margin-bottom:19px}
+  .map-data-count{top:10px;right:10px;padding:7px 9px;max-width:162px}
+  .map-data-count small{font-size:10px}
+  .map-action{left:10px;right:10px;bottom:13px;max-width:calc(100% - 20px);gap:5px}
+  .map-action .location-button{padding:9px 10px;font-size:11px;min-height:42px}
+  .map-legend{bottom:68px}
+  .map-expand-toggle{top:77px;right:10px;min-height:42px;padding:8px 10px}
+  .map-column.is-expanded .map-expand-toggle{top:calc(77px + env(safe-area-inset-top, 0px))}
+  .map-column.is-expanded .map-legend{bottom:calc(76px + env(safe-area-inset-bottom, 0px))}
+  .map-column.is-expanded .map-action{bottom:calc(15px + env(safe-area-inset-bottom, 0px))}
+  .plan-bar{padding:9px 12px}
+  .plan-bar input{padding:11px}
+  .saved-heading h1{font-size:25px}
+  .footer{font-size:10px}
+}
+@media(max-width:365px){
+  .brand small{display:none}
+  .map-data-count{max-width:135px}
+  .map-action .location-button{padding:8px;font-size:10px}
+}
+
+
+/* Typography — IBM Plex Sans for interface copy, Plex Mono only for measurements. */
+.brand strong {
+  font-family:var(--font-signal-interface),"Segoe UI",sans-serif;
+  font-weight:700;
+  letter-spacing:-.85px;
+}
+.section-lead h1,.saved-heading h1,.wifi-heading h2,
+.filter-head h2,.place-detail h3,.saved-detail h2{
+  font-family:var(--font-signal-interface),"Segoe UI",sans-serif;
+  font-weight:600;
+  letter-spacing:-.35px;
+}
+.place-info strong,.local-coverage-item strong,
+.coverage-network-row strong {font-weight:600}
+.coverage-map-score,.coverage-rating,.saved-count,
+.local-coverage-item strong{
+  font-family:var(--font-signal-data),"SFMono-Regular",Consolas,monospace;
+  font-variant-numeric:tabular-nums;
+}
+.coverage-map-score {font-weight:600;letter-spacing:-.5px}
+.coverage-rating{font-weight:600}
+.map-data-count strong{font-weight:600}
+.coverage-result-heading,.coverage-date,.map-data-count small{font-variant-numeric:tabular-nums}
+@media (max-width:700px) {
+  .brand strong {letter-spacing:-.7px}
+}
