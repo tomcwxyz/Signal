@@ -65,8 +65,8 @@ export default function CoveragePanel({ suggestedPostcode }: Props) {
   const operators = operator === "All" ? COVERAGE_OPERATORS : [operator];
   return <section className="coverage-widget" aria-labelledby="coverage-title">
     <div className="filter-head">
-      <span className="eyebrow" id="coverage-title">OFCOM MOBILE COVERAGE</span>
-      <span className="coverage-source">Predicted 4G/5G</span>
+      <h2 id="coverage-title">Coverage by postcode</h2>
+      <span className="coverage-source">Ofcom · 4G/5G</span>
     </div>
     <form className="coverage-search" onSubmit={submit}>
       <input aria-label="UK postcode for mobile coverage" autoComplete="postal-code" value={input}
@@ -75,7 +75,7 @@ export default function CoveragePanel({ suggestedPostcode }: Props) {
     </form>
     {loading && <p role="status" className="coverage-message">Checking Ofcom predictions for properties in this postcode…</p>}
     {error && <p role="alert" className="coverage-error">{error} <button type="button" className="inline-action" onClick={() => setRefresh(value => value + 1)}>Retry</button></p>}
-    {!requested && !loading && <p className="coverage-message">Check mobile coverage by postcode, or use your location. Results are predicted for individual properties.</p>}
+    {!requested && !loading && <p className="coverage-message">Check a postcode for property-level predictions.</p>}
     {data && !loading && <>
       <p className="coverage-result-heading">{data.postcode} · {data.properties.length} {data.properties.length === 1 ? "property" : "properties"} found</p>
       {data.properties.length > 1 && <label className="coverage-property-label" htmlFor="coverage-property">Choose a property
@@ -115,7 +115,7 @@ export default function CoveragePanel({ suggestedPostcode }: Props) {
         </a>
         <a href="https://www.ofcom.org.uk/mobile" target="_blank" rel="noopener noreferrer">Ofcom checker <ExternalLink size={12}/></a>
       </div>
-      <p className="coverage-disclaimer">These are computer-modelled predictions supplied by mobile operators and standardised by Ofcom. Actual coverage can differ because of buildings, terrain, devices and other factors. Operator maps may differ. Ofcom updates its source data periodically; check the network provider before relying on a connection.</p>
+      <details className="coverage-notes"><summary>About the predictions</summary><p className="coverage-disclaimer">These are computer-modelled predictions supplied by mobile operators and standardised by Ofcom. Actual coverage can differ because of buildings, terrain, devices and other factors. Operator maps may differ. Ofcom updates its source data periodically; check the network provider before relying on a connection.</p></details>
     </>}
   </section>;
 }
