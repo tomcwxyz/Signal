@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
@@ -25,5 +26,5 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = { themeColor: "#123b4b", width: "device-width", initialScale: 1 };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en-GB" className={`${interfaceFont.variable} ${dataFont.variable}`}><body>{children}</body></html>;
+  return <html lang="en-GB" className={`${interfaceFont.variable} ${dataFont.variable}`}><body><Script src="https://good-ship.co.uk/analytics/browser.js" strategy="afterInteractive" />{children}</body></html>;
 }
