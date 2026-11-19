@@ -4,7 +4,7 @@ import { ArrowRight, BookmarkPlus, Compass, Download, ExternalLink, LocateFixed,
 import SignalMap from "./SignalMap";
 import WiFiDirections from "./WiFiDirections";
 import SavedView from "./SavedView";
-import { DEFAULT_CENTRE, FETCH_RADIUS_METRES, distanceMetres, prettyDistance, snapshotCovers, sortByDistance, validCoordinates } from "@/lib/geo";
+import { DEFAULT_AREA_LABEL, DEFAULT_CENTRE, FETCH_RADIUS_METRES, distanceMetres, prettyDistance, snapshotCovers, sortByDistance, validCoordinates } from "@/lib/geo";
 import CoveragePanel from "./CoveragePanel";
 import LocalCoveragePanel from "./LocalCoveragePanel";
 import type { LocalCoverageResult } from "@/lib/local-coverage";
@@ -21,7 +21,7 @@ export default function SignalApp() {
   const [centre, setCentre] = useState<LatLon>(DEFAULT_CENTRE);
   const [zoom, setZoom] = useState(12.5);
   const [focus, setFocus] = useState({ ...DEFAULT_CENTRE, zoom: 12.5, version: 0 });
-  const [areaLabel, setAreaLabel] = useState("North-east England");
+  const [areaLabel, setAreaLabel] = useState(DEFAULT_AREA_LABEL);
   const [postcode, setPostcode] = useState("");
   const [searching, setSearching] = useState(false);
   const [coveragePostcode, setCoveragePostcode] = useState("");
