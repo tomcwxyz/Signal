@@ -13,14 +13,14 @@
   --sheet: #fbf9f4;
   --ink: #1b1a17;
   --ink-2: #48443c;
-  --ink-3: #7a7468;
+  --ink-3: #6b655a;
   --rule: #ddd5c5;
   --rule-soft: #e9e3d6;
   --cobalt: #2747d0;
   --cobalt-soft: #e4e8fa;
   --moss: #1f6f49;
   --moss-soft: #dfeee3;
-  --amber: #a8641a;
+  --amber: #93550f;
   --amber-soft: #fbefd9;
   --brick: #b23a2e;
 
@@ -61,6 +61,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,su
 
 /* ── Frame ─────────────────────────────────────────────────── */
 .app-frame{min-height:100dvh;display:flex;flex-direction:column;background:var(--paper)}
+.app-main{flex:1;display:flex;flex-direction:column;min-width:0}
+.app-main>.explorer{width:100%}
 
 .site-header{
   position:sticky;top:0;z-index:1000;height:var(--header);
@@ -130,7 +132,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,su
 .plan-bar input:focus,.coverage-search input:focus,.save-name-input:focus,.coverage-property-label select:focus{
   outline:none;border-color:var(--ink);box-shadow:0 0 0 3px #1b1a1714;
 }
-.plan-bar input::placeholder,.coverage-search input::placeholder{color:#a59e90}
+.plan-bar input::placeholder,.coverage-search input::placeholder{color:#7a7366}
 
 .small-primary,.coverage-search button,.local-sample-button,.save-button,.primary-button{
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
@@ -148,6 +150,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,su
 .map-column{position:sticky;top:var(--header);height:calc(100dvh - var(--header));min-height:560px;background:var(--paper-deep)}
 .map-panel{position:relative;height:100%;overflow:hidden;background:var(--paper-deep)}
 .map-canvas{position:absolute;inset:0}
+.map-canvas:focus-visible{outline:3px solid var(--cobalt);outline-offset:-3px}
 
 .info-column{padding:28px 28px 40px;background:var(--sheet);border-left:1px solid var(--ink);min-height:calc(100dvh - var(--header))}
 
@@ -391,7 +394,7 @@ input[type="checkbox"]{accent-color:var(--ink);width:15px;height:15px;margin:0}
 .coverage-map-score.score-1{background:#ec9a48;color:#3e2606}
 .coverage-map-score.score-2{background:#e9c95a;color:#3e3206}
 .coverage-map-score.score-3{background:#9cc883;color:#1a3a12}
-.coverage-map-score.score-4{background:#2f8a5c;color:#fff}
+.coverage-map-score.score-4{background:#26794f;color:#fff}
 .coverage-map-score.score-missing,.coverage-map-score.is-varied{background:#e4ddcf;color:var(--ink-2);border-style:dashed}
 .signal-coverage-marker.selected .coverage-map-score{outline:2px solid var(--ink);outline-offset:2px}
 .signal-heat-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:399;pointer-events:none}
