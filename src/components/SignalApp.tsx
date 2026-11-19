@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { ArrowRight, BookmarkPlus, Compass, Download, ExternalLink, LocateFixed, MapPin, Search, Share2, Wifi, WifiOff } from "lucide-react";
+import { ArrowRight, BookmarkPlus, Compass, Download, ExternalLink, LocateFixed, MapPin, Search, Share2, Signal, Wifi, WifiOff } from "lucide-react";
 import SignalMap from "./SignalMap";
 import WiFiDirections from "./WiFiDirections";
 import SavedView from "./SavedView";
@@ -254,16 +254,16 @@ export default function SignalApp() {
   };
   return <div className="app-frame">
     <header className="site-header">
-      <div className="brand"><span className="brand-mark" aria-hidden="true"><span /><span /><span /><span /></span><div><strong>signal<span className="brand-point">.</span></strong><small>Coverage and public Wi-Fi</small></div></div>
-      <div className={"connection-status" + (!online ? " is-offline" : "")}>{online ? <Wifi size={15}/> : <WifiOff size={15}/>}<span>{online ? "Online" : "Offline"}</span></div>
+      <div className="brand"><span className="brand-mark" aria-hidden="true"><span /><span /><span /><span /></span><div><strong>signal</strong><small>Wi-Fi &amp; mobile signal, UK</small></div></div>
+      <nav className="tabs" aria-label="Main sections">
+        {([{ id: "here", label: "Map", icon: <LocateFixed size={16}/> }, { id: "plan", label: "Plan", icon: <Compass size={16}/> }, { id: "saved", label: "Saved", icon: <Download size={16}/> }] as const).map(item =>
+          <button key={item.id} className={"tab" + (tab === item.id ? " active" : "")} onClick={() => setTab(item.id)} aria-current={tab === item.id ? "page" : undefined}>
+            {item.icon}{item.label}{item.id === "saved" && areas.length > 0 && <span className="saved-count">{areas.length}</span>}
+          </button>
+        )}
+      </nav>
+      <div className={"connection-status" + (!online ? " is-offline" : "")}>{online ? <Wifi size={14}/> : <WifiOff size={14}/>}<span>{online ? "Online" : "Offline"}</span></div>
     </header>
-    <nav className="tabs" aria-label="Main sections">
-      {([{ id: "here", label: "Map", icon: <LocateFixed size={17}/> }, { id: "plan", label: "Plan", icon: <Compass size={17}/> }, { id: "saved", label: "Saved", icon: <Download size={17}/> }] as const).map(item =>
-        <button key={item.id} className={"tab" + (tab === item.id ? " active" : "")} onClick={() => setTab(item.id)} aria-current={tab === item.id ? "page" : undefined}>
-          {item.icon}{item.label}{item.id === "saved" && areas.length > 0 && <span className="saved-count">{areas.length}</span>}
-        </button>
-      )}
-    </nav>
     {notice && <div className="notice" role="status"><span>{notice}</span><button aria-label="Dismiss message" onClick={() => setNotice("")}>×</button></div>}
     {tab === "saved" ? <SavedView areas={areas} openId={openSavedId} setOpenId={setOpenSavedId} onDelete={deleteArea} online={online} onOpenMap={area => { focusOn(area.centre, area.label, 14); setTab("here"); }}/> :
       <>
@@ -274,10 +274,10 @@ export default function SignalApp() {
               expanded={mapExpanded} onToggleExpanded={() => setMapExpanded(value => !value)} onSelect={setSelectedId} onViewChange={handleViewChange} wifiStatus={dataStatus} wifiCount={visible.length} freeCount={freeCount} onShowConnections={() => document.getElementById("wifi-results")?.scrollIntoView({ behavior: "smooth", block: "start" })}
               coverageSamples={visibleLocal} coverageOperator={localOperator} showHeat={localEnabled && showHeat}
               selectedCoveragePostcode={selectedLocalPostcode} onSelectCoverage={openLocalPostcode}/>
-            <div className="map-action" role="group" aria-label="Map actions"><button className="location-button" type="button" aria-pressed={localEnabled} onClick={toggleLocalCoverage} disabled={!online} title="Toggle estimated mobile coverage">{localLoading ? "Checking…" : localEnabled ? "Hide coverage" : "Coverage"}</button><button className="location-button" type="button" onClick={shareLocation} title="Share map area"><Share2 size={16}/>Share</button><button className="location-button" type="button" onClick={useLocation} disabled={geolocating}><LocateFixed size={17}/>{geolocating ? "Locating…" : "My location"}</button></div>
+            <div className="map-action" role="group" aria-label="Map actions"><button className="location-button" type="button" aria-pressed={localEnabled} onClick={toggleLocalCoverage} disabled={!online} title="Toggle estimated mobile coverage"><Signal size={16}/>{localLoading ? "Checking…" : "Coverage"}</button><button className="location-button" type="button" onClick={shareLocation} title="Share map area"><Share2 size={16}/>Share</button><button className="location-button" type="button" onClick={useLocation} disabled={geolocating}><LocateFixed size={17}/>{geolocating ? "Locating…" : "My location"}</button></div>
           </div>
           <section className="info-column">
-            <div className="section-lead"><h1>{tab === "here" ? "Explore this area" : "Plan an area"}</h1><p><MapPin size={15}/>{areaLabel}</p></div>
+            <div className="section-lead"><p className="section-kicker"><MapPin size={13}/>{tab === "here" ? "Exploring" : "Planning ahead"}</p><h1>{areaLabel}</h1></div>
             <LocalCoveragePanel centreMoved={Boolean(localCoverage && !localIsCurrent)}
               samples={visibleLocal} loading={localLoading} error={localError}
               operator={localOperator} onOperatorChange={setLocalOperator}
@@ -295,7 +295,7 @@ export default function SignalApp() {
               !resultIsLocal ? <p className="list-message">Search this area to see available Wi-Fi records.</p> : visible.length === 0 ? <p className="list-message">No matching Wi-Fi locations were found in OpenStreetMap around here. That doesn't mean none exist. Try a different location or include restricted hotspots.</p> :
               <div className="places-list">{visible.slice(0, 12).map(place => <div key={place.id} className={"place-row" + (selected?.id === place.id ? " selected" : "")}>
                 <button type="button" className="place-select" onClick={() => setSelectedId(place.id)} aria-label={"View details for " + place.name}>
-                  <span className="wifi-icon"><Wifi size={19}/></span><span className="place-info"><strong>{place.name}</strong><small>{place.kind} · {prettyDistance(distanceMetres(centre, place))}</small></span><span className={"access-tag " + place.access}>{ACCESS[place.access]}</span>
+                  <span className="wifi-icon"><Wifi size={17}/></span><span className="place-info"><strong>{place.name}</strong><small>{place.kind} · {prettyDistance(distanceMetres(centre, place))}</small></span><span className={"access-tag " + place.access}>{ACCESS[place.access]}</span>
                 </button>
                 <WiFiDirections place={place} compact/>
               </div>)}{visible.length > 12 && <p className="list-message">Showing 12 nearest of {visible.length} mapped places.</p>}</div>}

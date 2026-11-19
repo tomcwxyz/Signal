@@ -14,10 +14,10 @@ export default function OfflineDiagram({ area }: { area: SavedArea }) {
       <rect width="300" height="300" rx="20" fill="#eaf3f2" />
       <path d="M0 75H300M0 150H300M0 225H300M75 0V300M150 0V300M225 0V300" stroke="#d2e2df" strokeWidth="1" />
       <circle cx="150" cy="150" r="140" fill="none" stroke="#b0ceca" strokeDasharray="5 6"/>
-      <circle cx="150" cy="150" r="6" fill="#173d4b" stroke="white" strokeWidth="2"/>
+      <circle cx="150" cy="150" r="6" fill="#2747d0" stroke="white" strokeWidth="2"/>
       {points.map((place, index) => {
         const p = xy(place.lat, place.lon);
-        return <g key={place.id}><circle cx={p.x} cy={p.y} r="10" fill={place.access === "free" ? "#138b74" : "#3276c5"} stroke="white" strokeWidth="2"/><text x={p.x} y={p.y + 3.5} fill="#fff" textAnchor="middle" fontSize="9" fontWeight="700">{index + 1}</text></g>;
+        return <g key={place.id}><circle cx={p.x} cy={p.y} r="10" fill={place.access === "free" ? "#1f6f49" : "#1b1a17"} stroke="white" strokeWidth="2"/><text x={p.x} y={p.y + 3.5} fill="#fff" textAnchor="middle" fontSize="9" fontWeight="700">{index + 1}</text></g>;
       })}
     </svg>
     <p className="diagram-note">Positions only, not a street map. Approximate area radius {Math.round(radius / 1000)} km. Numbered locations match the list.</p>

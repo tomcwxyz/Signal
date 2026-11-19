@@ -4,7 +4,7 @@
   "description": "Find nearby public Wi-Fi and plan ahead, with useful saved details offline.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f5f9fa",
-  "theme_color": "#123b4b",
+  "background_color": "#f3efe6",
+  "theme_color": "#1b1a17",
   "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
 }
