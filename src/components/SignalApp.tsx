@@ -264,6 +264,7 @@ export default function SignalApp() {
       </nav>
       <div className={"connection-status" + (!online ? " is-offline" : "")}>{online ? <Wifi size={14}/> : <WifiOff size={14}/>}<span>{online ? "Online" : "Offline"}</span></div>
     </header>
+    <main id="main" className="app-main">
     {notice && <div className="notice" role="status"><span>{notice}</span><button aria-label="Dismiss message" onClick={() => setNotice("")}>×</button></div>}
     {tab === "saved" ? <SavedView areas={areas} openId={openSavedId} setOpenId={setOpenSavedId} onDelete={deleteArea} online={online} onOpenMap={area => { focusOn(area.centre, area.label, 14); setTab("here"); }}/> :
       <>
@@ -306,6 +307,7 @@ export default function SignalApp() {
           </section>
         </div>
       </>}
+    </main>
     <footer className="footer"><span>Signal · Alpha 1</span><span>Map and Wi-Fi © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a> · <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noopener noreferrer">Improve OSM data</a></span></footer>
   </div>;
 }
