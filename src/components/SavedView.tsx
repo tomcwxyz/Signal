@@ -16,11 +16,11 @@ type Props = {
 export default function SavedView({ areas, openId, setOpenId, onDelete, online, onOpenMap }: Props) {
   const open = areas.find(area => area.id === openId);
   return <section className="saved-view" aria-label="Saved areas">
-    <div className="saved-heading"><span className="eyebrow">YOUR OFFLINE POCKET</span><h1>Saved areas</h1>
+    <div className="saved-heading"><span className="eyebrow">Offline</span><h1>Saved areas</h1>
       <p>Keep useful Wi-Fi locations and coordinates for when the signal disappears.</p>
     </div>
     <div className="truth-note"><WifiOff size={19}/><p><strong>What works offline:</strong> this place list, opening details and a simple hotspot locator. Street maps and fresh coverage data are not included.</p></div>
-    {areas.length === 0 ? <div className="saved-empty"><Download size={34}/><h2>Nothing saved yet</h2><p>Go to Here or Plan, explore a place, then choose <strong>Save Wi-Fi list</strong>.</p></div> :
+    {areas.length === 0 ? <div className="saved-empty"><Download size={34}/><h2>Nothing saved yet</h2><p>Find an area on the Map or Plan tab, then choose <strong>Save Wi-Fi for offline use</strong>.</p></div> :
       <div className="saved-layout"><div className="saved-cards">{areas.map(area => <article key={area.id} className={"area-card" + (open?.id === area.id ? " active" : "")}>
         <button className="area-open" onClick={() => setOpenId(open?.id === area.id ? null : area.id)}>
           <MapPin size={20}/><span><strong>{area.label}</strong><small>{area.places.length} Wi-Fi places · Saved {new Date(area.savedAt).toLocaleDateString("en-GB")}{snapshotNeedsReview(area) ? " · May be outdated" : ""}</small></span>

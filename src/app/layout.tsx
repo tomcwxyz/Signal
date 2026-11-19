@@ -1,11 +1,17 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Fraunces, Hanken_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
-const interfaceFont = IBM_Plex_Sans({
+const displayFont = Fraunces({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  axes: ["opsz", "SOFT"],
+  variable: "--font-signal-display",
+  display: "swap",
+});
+
+const interfaceFont = Hanken_Grotesk({
+  subsets: ["latin"],
   variable: "--font-signal-interface",
   display: "swap",
 });
@@ -24,7 +30,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon.svg" }
 };
-export const viewport: Viewport = { themeColor: "#123b4b", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#f3efe6", width: "device-width", initialScale: 1 };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en-GB" className={`${interfaceFont.variable} ${dataFont.variable}`}><body><Script src="https://good-ship.co.uk/analytics/browser.js" strategy="afterInteractive" />{children}</body></html>;
+  return <html lang="en-GB" className={`${displayFont.variable} ${interfaceFont.variable} ${dataFont.variable}`}><body><Script src="https://good-ship.co.uk/analytics/browser.js" strategy="afterInteractive" />{children}</body></html>;
 }
