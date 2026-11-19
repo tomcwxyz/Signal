@@ -12,6 +12,7 @@ import type { CoverageView } from "@/lib/coverage-visual";
 import { parseSharedMap, sharedMapPath } from "@/lib/shared-map";
 import { listAreas, removeArea, saveArea } from "@/lib/saved-areas";
 import type { LatLon, SavedArea, WiFiPlace, WiFiResult } from "@/lib/types";
+import { readWiFiResponse } from "@/lib/wifi-client";
 type Tab = "here" | "plan" | "saved";
 const ACCESS: Record<WiFiPlace["access"], string> = { free: "Tagged free", unknown: "Access unconfirmed", customers: "Customers only", paid: "Paid access" };
 export default function SignalApp() {
@@ -95,11 +96,7 @@ export default function SignalApp() {
     setLoading(true); setFetchError("");
     const params = new URLSearchParams({ lat: centre.lat.toFixed(2), lon: centre.lon.toFixed(2) });
     // Debounce map movement so panning does not overload shared OpenStreetMap servers.
-    const timeout = setTimeout(() => fetch("/api/wifi?" + params, { signal: abort.signal }).then(async response => {
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Wi-Fi look-up unavailable");
-      return data as WiFiResult;
-    }).then(data => { setResult(data); setSelectedId(null); })
+    const timeout = setTimeout(() => fetch("/api/wifi?" + params, { signal: abort.signal }).then(readWiFiResponse).then(data => { setResult(data); setSelectedId(null); })
       .catch(error => { if (!abort.signal.aborted) { setFetchError(error instanceof Error ? error.message : "Unable to load Wi-Fi spots"); setResult(null); } })
       .finally(() => { if (!abort.signal.aborted) setLoading(false); }), 650);
     return () => { clearTimeout(timeout); abort.abort(); };
