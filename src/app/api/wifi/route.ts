@@ -8,12 +8,14 @@ import type { OverpassElement } from "@/lib/wifi";
 export const maxDuration = 30;
 
 const schema = z.object({ lat: z.coerce.number().finite(), lon: z.coerce.number().finite() });
+// Public Overpass instances are best-effort and can be overloaded.
+// The former UK-first instance is IPv6-only and cannot reliably be reached
+// from Vercel's serverless network. Prefer a European, no-key instance.
+// Keep the total sequential upstream budget BELOW Vercel's 30s limit.
 const endpoints = [
-  // Confirmed live against both Newton Aycliffe and Newcastle on 27 Oct 2026.
-  // Region-specific service: Britain and Ireland data only.
-  "https://overpass.atownsend.org.uk/api/interpreter",
-  "https://overpass.private.coffee/api/interpreter",
-  "https://overpass-api.de/api/interpreter"
+  { url: "https://ovp.dresel.systems/api/interpreter", timeoutMs: 11000 },
+  { url: "https://overpass.private.coffee/api/interpreter", timeoutMs: 7000 },
+  { url: "https://overpass-api.de/api/interpreter", timeoutMs: 5000 }
 ] as const;
 
 type OverpassResponse = {
@@ -21,7 +23,7 @@ type OverpassResponse = {
   osm3s?: { timestamp_osm_base?: string };
 };
 
-async function getElements(url: string, data: string): Promise<OverpassResponse> {
+async function getElements(url: string, data: string, timeoutMs: number): Promise<OverpassResponse> {
   const response = await fetch(url, {
     method: "POST",
     headers: {
@@ -29,11 +31,11 @@ async function getElements(url: string, data: string): Promise<OverpassResponse>
       "User-Agent": "Signal-WiFi-Alpha/0.3 (+https://github.com/tomcwxyz/Signal)"
     },
     body: new URLSearchParams({ data }),
-    signal: AbortSignal.timeout(11500),
+    signal: AbortSignal.timeout(timeoutMs),
     cache: "no-store"
   });
   if (!response.ok) throw new Error("Overpass " + response.status);
-  const raw: unknown = await response.json();
+  const raw: unknown = await response.json().catch(() => { throw new Error("Overpass returned non-JSON data"); });
   if (!raw || typeof raw !== "object" || !("elements" in raw) || !Array.isArray(raw.elements)) {
     throw new Error("Invalid Overpass response");
   }
@@ -46,7 +48,7 @@ const queryOverpass = unstable_cache(async (lat: number, lon: number) => {
   const query = overpassQuery(centre);
   for (const endpoint of endpoints) {
     try {
-      const data = await getElements(endpoint, query);
+      const data = await getElements(endpoint.url, query, endpoint.timeoutMs);
       const { places, matches, limited } = normaliseOverpassResults(data.elements, centre);
       return {
         places, centre, matches, limited,
@@ -56,12 +58,12 @@ const queryOverpass = unstable_cache(async (lat: number, lon: number) => {
         source: "OpenStreetMap" as const
       };
     } catch (err) {
-      console.warn("Signal Wi-Fi: upstream source failed", new URL(endpoint).host,
+      console.warn("Signal Wi-Fi: upstream source failed", new URL(endpoint.url).host,
         err instanceof Error ? err.message : "Unknown error");
     }
   }
   throw new Error("Wi-Fi data sources are unavailable");
-}, ["signal-wifi-v4-uk-primary"], { revalidate: 900 });
+}, ["signal-wifi-v5-europe-fallback"], { revalidate: 900 });
 
 export async function GET(request: NextRequest) {
   const parsed = schema.safeParse(Object.fromEntries(request.nextUrl.searchParams));
