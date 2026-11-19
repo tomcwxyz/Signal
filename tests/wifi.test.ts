@@ -1,9 +1,22 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { classifyWiFiAccess, normaliseWiFi } from "../src/lib/wifi";
-import { distanceMetres, snapshotCovers, validCoordinates } from "../src/lib/geo";
+import { DEFAULT_AREA_LABEL, DEFAULT_CENTRE, distanceMetres, snapshotCovers, validCoordinates } from "../src/lib/geo";
 import { parseSharedMap, sharedMapPath } from "../src/lib/shared-map";
 import { ageInDays } from "../src/lib/snapshot";
+test("new visitors start at Newcastle city centre, not a previously hard-coded town", () => {
+  assert.deepEqual(DEFAULT_CENTRE, { lat: 54.974, lon: -1.614 });
+  assert.equal(DEFAULT_AREA_LABEL, "Newcastle upon Tyne");
+  assert.equal(validCoordinates(DEFAULT_CENTRE), true);
+});
+
+test("an explicit shared location takes precedence over Newcastle", () => {
+  const original = { lat: 53.381, lon: -1.47 };
+  const shared = parseSharedMap(new URL(sharedMapPath(original, 14), "https://signal.good-ship.co.uk").searchParams);
+  assert.deepEqual(shared?.centre, original);
+  assert.notDeepEqual(shared?.centre, DEFAULT_CENTRE);
+});
+
 test("never represents unknown fees as free", () => {
   assert.equal(classifyWiFiAccess({ internet_access: "wlan" }), "unknown");
   assert.equal(classifyWiFiAccess({ "internet_access:fee": "no" }), "free");
