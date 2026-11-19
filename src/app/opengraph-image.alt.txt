@@ -1,0 +1,1 @@
+Signal: find public Wi-Fi and mobile coverage across the UK. A muted street map with Wi-Fi pins and Ofcom coverage scores.
